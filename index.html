@@ -5,7 +5,7 @@
 <meta name="viewport" content="width=device-width,initial-scale=1,viewport-fit=cover">
 <title>Pinguin-Lärmampel</title>
 <link rel="preconnect" href="https://fonts.googleapis.com">
-<link rel="stylesheet" href="https://fonts.googleapis.com/css2?family=Baloo+2:wght@600;800&family=Nunito:wght@500;700;800&display=swap">
+<link rel="stylesheet" href="https://fonts.googleapis.com/css2?family=Patrick+Hand&family=Nunito:wght@500;700;800&display=swap">
 <style>
 /* Layout: Tafelbild im Querformat – Ampel links, Pinguin-Bühne mittig, Fischeimer rechts. Eine Polarwelt, bewusst nur ein (helles) Thema. */
 :root{
@@ -13,7 +13,7 @@
   --snow:#ffffff; --line:#b9d8ea;
   --go:#25a865; --wait:#f0ae1c; --stop:#e3434a; --fish:#ff8a3d;
   --housing:#203246;
-  --display:"Baloo 2","Trebuchet MS","Arial Rounded MT Bold",system-ui,sans-serif;
+  --display:"Patrick Hand","Comic Sans MS","Chalkboard SE","Trebuchet MS","Arial Rounded MT Bold",system-ui,sans-serif;
   --body:"Nunito","Segoe UI",system-ui,sans-serif;
   color-scheme:light;
 }
@@ -185,6 +185,37 @@ main{flex:1;display:grid;grid-template-columns:150px minmax(0,1fr) 330px;gap:16p
 .toast{position:fixed;left:50%;bottom:24px;transform:translateX(-50%);background:var(--ink);color:var(--snow);padding:12px 22px;border-radius:999px;font-weight:800;font-size:1.1rem;z-index:25;display:flex;gap:10px;align-items:center}
 .toast svg{width:34px}
 
+
+/* ---------- Handgezeichneter Look ---------- */
+:root{--wob:255px 18px 225px 18px/18px 225px 18px 255px;--wob2:18px 225px 18px 255px/255px 18px 225px 18px;--pen:#2a4560;
+  --paper:url("data:image/svg+xml,%3Csvg xmlns='http://www.w3.org/2000/svg' width='220' height='220'%3E%3Cfilter id='p'%3E%3CfeTurbulence type='fractalNoise' baseFrequency='.9' numOctaves='3' stitchTiles='stitch'/%3E%3CfeColorMatrix values='0 0 0 0 .1 0 0 0 0 .2 0 0 0 0 .3 0 0 0 .09 0'/%3E%3C/filter%3E%3Crect width='220' height='220' filter='url(%23p)'/%3E%3C/svg%3E")}
+body{background-image:var(--paper),radial-gradient(1200px 500px at 15% -10%,#ffffff 0%,rgba(255,255,255,0) 60%),radial-gradient(900px 600px at 110% 110%,#c6e6f6 0%,rgba(198,230,246,0) 60%),linear-gradient(180deg,var(--sky) 0%,var(--sky2) 70%)}
+.panel{border:2.5px solid var(--pen);border-radius:var(--wob);box-shadow:5px 6px 0 rgba(22,50,74,.18)}
+.rewards{background-image:var(--paper);background-color:rgba(255,255,255,.85)}
+.btn{border:2.5px solid var(--pen);border-radius:var(--wob2);box-shadow:2px 3px 0 rgba(22,50,74,.25)}
+.btn:active{transform:translate(2px,3px);box-shadow:none}
+.status{border:2.5px solid var(--pen);border-radius:var(--wob2);box-shadow:4px 5px 0 rgba(22,50,74,.18)}
+.stage > .meter,.demo{border:2px solid var(--pen);border-radius:var(--wob)}
+.meter-track,.bar{border:2px solid var(--pen);border-radius:var(--wob2)}
+.meter-fill,.bar i{border-radius:var(--wob2);background-image:repeating-linear-gradient(-45deg,rgba(255,255,255,.28) 0 4px,transparent 4px 9px)}
+.ampel{border:3px solid #0d1824;border-radius:46px 36px 50px 38px/38px 50px 36px 46px;box-shadow:6px 8px 0 rgba(13,24,36,.35);background-image:var(--paper)}
+.lamp{border:3px solid #0d1824;box-shadow:inset -8px -10px 0 rgba(0,0,0,.22),inset 6px 6px 0 rgba(255,255,255,.25)}
+.lamp.r.on{box-shadow:inset -8px -10px 0 rgba(0,0,0,.18),inset 6px 6px 0 rgba(255,255,255,.35),0 0 34px 8px rgba(227,67,74,.7)}
+.lamp.y.on{box-shadow:inset -8px -10px 0 rgba(0,0,0,.18),inset 6px 6px 0 rgba(255,255,255,.35),0 0 34px 8px rgba(240,174,28,.7)}
+.lamp.g.on{box-shadow:inset -8px -10px 0 rgba(0,0,0,.18),inset 6px 6px 0 rgba(255,255,255,.35),0 0 34px 8px rgba(37,168,101,.6)}
+.lamp:nth-child(1){border-radius:48% 52% 50% 50%/52% 48% 52% 48%} .lamp:nth-child(3){border-radius:52% 48% 48% 52%/48% 52% 50% 50%}
+.pole{border:3px solid #0d1824;border-top:0}
+.bucket{border:2.5px dashed var(--pen);border-radius:var(--wob2)}
+.slot{border:1.5px solid rgba(42,69,96,.35);border-radius:var(--wob)}
+.stat{border:2px solid var(--pen);border-radius:var(--wob2);box-shadow:3px 4px 0 rgba(22,50,74,.15)}
+.sheet{border:3px solid var(--pen);border-radius:30px 18px 34px 20px/20px 34px 18px 30px;background-image:var(--paper);box-shadow:8px 10px 0 rgba(22,50,74,.3)}
+.variant{border:2.5px solid var(--pen);border-radius:var(--wob);box-shadow:3px 4px 0 rgba(22,50,74,.15)}
+.variant[aria-pressed="true"]{box-shadow:4px 5px 0 var(--sea)}
+.seg button{border:2px solid var(--pen);border-radius:var(--wob2)}
+.floe{border:2.5px solid #5f8fb0;border-radius:48% 52% 45% 55%/62% 58% 42% 38%}
+.toast{border:2.5px solid #000;border-radius:var(--wob2)}
+.brand,.status h2,.rewards h3,.count,.count b,.sheet h2,.variant b,.stat b,.pick-h{font-weight:400;letter-spacing:.01em}
+.brand{font-size:2rem} .rewards h3{font-size:1.8rem} .status h2{font-size:clamp(2.2rem,4.6vw,3.8rem)} .sheet h2{font-size:2.4rem} .variant b{font-size:1.3rem} .stat b{font-size:1.8rem} .pick-h{font-size:1.4rem}
 @media (max-width:980px){
   main{grid-template-columns:1fr}
   .ampel-wrap{order:-1}
@@ -200,6 +231,33 @@ main{flex:1;display:grid;grid-template-columns:150px minmax(0,1fr) 330px;gap:16p
 </style>
 </head>
 <body>
+<svg width="0" height="0" style="position:absolute" aria-hidden="true" focusable="false">
+  <defs>
+    <!-- Handgezeichnet: leicht zittrige Linien -->
+    <filter id="sketch" x="-20%" y="-20%" width="140%" height="140%">
+      <feTurbulence type="fractalNoise" baseFrequency="0.04" numOctaves="2" seed="7" result="n"/>
+      <feDisplacementMap in="SourceGraphic" in2="n" scale="3.2" xChannelSelector="R" yChannelSelector="G"/>
+    </filter>
+    <!-- Licht von oben links, Schatten unten rechts -->
+    <radialGradient id="tone" cx=".32" cy=".26" r=".95">
+      <stop offset="0" stop-color="#ffffff" stop-opacity=".22"/><stop offset=".45" stop-color="#ffffff" stop-opacity="0"/>
+      <stop offset=".75" stop-color="#000000" stop-opacity=".18"/><stop offset="1" stop-color="#000000" stop-opacity=".45"/>
+    </radialGradient>
+    <radialGradient id="toneL" cx=".3" cy=".25" r=".95">
+      <stop offset="0" stop-color="#ffffff" stop-opacity=".6"/><stop offset=".5" stop-color="#ffffff" stop-opacity="0"/>
+      <stop offset=".8" stop-color="#5d86a8" stop-opacity=".18"/><stop offset="1" stop-color="#3f6a8e" stop-opacity=".38"/>
+    </radialGradient>
+    <radialGradient id="maskGrad" cx=".3" cy=".25" r=".95">
+      <stop offset="0" stop-color="#000"/><stop offset=".58" stop-color="#000"/><stop offset=".85" stop-color="#fff"/>
+    </radialGradient>
+    <mask id="shadeMask" maskContentUnits="objectBoundingBox"><rect width="1" height="1" fill="url(#maskGrad)"/></mask>
+    <!-- Buntstift-Schraffur -->
+    <pattern id="hatch" patternUnits="userSpaceOnUse" width="6" height="6" patternTransform="rotate(38)">
+      <line x1="0" y1="0" x2="0" y2="6" stroke="#05090f" stroke-width="1.8" stroke-opacity=".45"/></pattern>
+    <pattern id="hatchL" patternUnits="userSpaceOnUse" width="6" height="6" patternTransform="rotate(38)">
+      <line x1="0" y1="0" x2="0" y2="6" stroke="#3d6a90" stroke-width="1.5" stroke-opacity=".55"/></pattern>
+  </defs>
+</svg>
 
 <header class="top">
   <h1 class="brand">Pinguin-Lärmampel <small id="pengName">mit Pino</small></h1>
@@ -230,16 +288,16 @@ main{flex:1;display:grid;grid-template-columns:150px minmax(0,1fr) 330px;gap:16p
       </svg>
       <div class="sun"></div>
       <svg class="clouds" viewBox="0 0 1000 150" preserveAspectRatio="xMidYMin slice">
-        <g fill="#6f7d92"><ellipse cx="160" cy="70" rx="120" ry="38"/><ellipse cx="230" cy="48" rx="80" ry="40"/><ellipse cx="110" cy="52" rx="60" ry="30"/></g>
-        <g fill="#7e8ca1" style="animation-delay:-3s"><ellipse cx="760" cy="60" rx="140" ry="40"/><ellipse cx="840" cy="38" rx="80" ry="38"/><ellipse cx="690" cy="44" rx="60" ry="28"/></g>
-        <g fill="#8e9bb0" style="animation-duration:8s"><ellipse cx="470" cy="28" rx="110" ry="26"/></g>
+        <g fill="#6f7d92" stroke="#4b586b" stroke-width="3" filter="url(#sketch)"><ellipse cx="160" cy="70" rx="120" ry="38"/><ellipse cx="230" cy="48" rx="80" ry="40"/><ellipse cx="110" cy="52" rx="60" ry="30"/></g>
+        <g fill="#7e8ca1" stroke="#4b586b" stroke-width="3" filter="url(#sketch)" style="animation-delay:-3s"><ellipse cx="760" cy="60" rx="140" ry="40"/><ellipse cx="840" cy="38" rx="80" ry="38"/><ellipse cx="690" cy="44" rx="60" ry="28"/></g>
+        <g fill="#8e9bb0" stroke="#4b586b" stroke-width="3" filter="url(#sketch)" style="animation-duration:8s"><ellipse cx="470" cy="28" rx="110" ry="26"/></g>
       </svg>
-      <svg class="bergs" viewBox="0 0 1000 150" preserveAspectRatio="xMidYMax slice">
+      <svg class="bergs" viewBox="0 0 1000 150" preserveAspectRatio="xMidYMax slice"><g filter="url(#sketch)" stroke="#5f8fb0" stroke-width="2.5" stroke-linejoin="round">
         <path d="M0 150 L0 104 L60 78 L110 96 L170 46 L240 92 L300 84 L350 150Z" fill="#eaf6fd"/>
         <path d="M170 46 L196 150 L240 92Z" fill="#c4e2f3"/><path d="M60 78 L80 150 L110 96Z" fill="#d3eaf6"/>
         <path d="M640 150 L680 92 L730 66 L770 88 L830 36 L885 92 L945 80 L1000 100 L1000 150Z" fill="#eaf6fd"/>
         <path d="M830 36 L856 150 L885 92Z" fill="#c4e2f3"/><path d="M730 66 L748 150 L770 88Z" fill="#d3eaf6"/>
-        <path d="M400 150 L428 122 L470 116 L500 150Z" fill="#f6fbfe"/><path d="M470 116 L478 150 L500 150Z" fill="#d3eaf6"/>
+        <path d="M400 150 L428 122 L470 116 L500 150Z" fill="#f6fbfe"/><path d="M470 116 L478 150 L500 150Z" fill="#d3eaf6"/><path d="M180 70 l14 60 M840 60 l14 60 M70 92 l8 40" stroke="#9cc3dd" stroke-width="1.5" fill="none"/></g>
       </svg>
       <div class="sea"></div>
     </div>
@@ -387,6 +445,11 @@ const ACCS = {
   glasses: "Brille & Fliege",
   helmet:  "Astronaut"
 };
+const OL = 'stroke="#15202c" stroke-width="3" stroke-linejoin="round"';
+// Grundform + Farbverlauf-Schatten + Schraffur im Schattenbereich
+const shade = (tag, light) => tag.replace("/>", ` ${light ? 'stroke="#15202c" stroke-opacity=".55" stroke-width="2.4"' : OL}/>`) +
+  tag.replace(/fill="[^"]*"/, `fill="url(#${light?"toneL":"tone"})"`) +
+  tag.replace(/fill="[^"]*"/, `fill="url(#${light?"hatchL":"hatch"})" mask="url(#shadeMask)"`);
 const both = s => s + `<g transform="translate(240 0) scale(-1 1)">${s}</g>`;
 
 function penguinSVG(key, mood, accKey){
@@ -414,7 +477,7 @@ function penguinSVG(key, mood, accKey){
     chick:  both(`<circle cx="${120-p.bx+6}" cy="${bcy+10}" r="10" fill="${p.body}"/><circle cx="${120-p.bx+12}" cy="${bcy+44}" r="9" fill="${p.body}"/><circle cx="${120-p.bx+30}" cy="${bcy-40}" r="9" fill="${p.body}"/>`) +
             `<path d="M110 ${top+6} Q112 ${top-12} 120 ${top} Q126 ${top-16} 132 ${top+6}" fill="none" stroke="${p.head}" stroke-width="7" stroke-linecap="round"/>`
   };
-  const mask = dark ? "" : `<ellipse cx="120" cy="${m[0]}" rx="${m[1]}" ry="${m[2]}" fill="${p.belly}"/>`;
+  const mask = dark ? "" : shade(`<ellipse cx="120" cy="${m[0]}" rx="${m[1]}" ry="${m[2]}" fill="${p.belly}"/>`, true);
   const rings = p.ring ? both(`<circle cx="100" cy="106" r="${p.ringR}" fill="${p.ring}"/>`) : "";
 
   // Große, glänzende Augen mit zwei Lichtpunkten
@@ -431,17 +494,17 @@ function penguinSVG(key, mood, accKey){
           `<path d="M117 104 Q120 100 123 104" stroke="#e8a917" stroke-width="4" fill="none"/><path d="M98 168 L120 180 L142 168 L142 184 L120 176 L98 184Z" fill="#e3434a"/><circle cx="120" cy="178" r="5" fill="#b02a30"/>`,
     helmet: `<circle cx="120" cy="106" r="${p.hr+10}" fill="rgba(170,215,245,.22)" stroke="#cbd8e4" stroke-width="7"/><path d="M72 76 Q86 52 112 46" stroke="#fff" stroke-width="6" fill="none" stroke-linecap="round" opacity=".9"/><rect x="86" y="176" width="68" height="12" rx="6" fill="#cbd8e4"/><line x1="120" y1="32" x2="120" y2="12" stroke="#cbd8e4" stroke-width="4"/><circle cx="120" cy="9" r="7" fill="#e3434a"/>`
   };
-  const bk = s => `<g transform="translate(120 124) scale(${p.beakS}) translate(-120 -124)" fill="${p.beak}" stroke="${p.beakStroke||"none"}" stroke-width="2" stroke-linejoin="round">${s}</g>`;
+  const bk = s => `<g transform="translate(120 124) scale(${p.beakS}) translate(-120 -124)" fill="${p.beak}" stroke="${p.beakStroke||"#15202c"}" stroke-opacity="${p.beakStroke?1:.7}" stroke-width="2.4" stroke-linejoin="round">${s}</g>`;
   const flip = (x, d) => `M${x+2*d} 160 Q${x-30*d} 196 ${x-18*d} 228 Q${x-2*d} 220 ${x+8*d} 192Z`;
 
   return `<svg class="peng mood-${mood||"g"}" viewBox="0 0 240 300" role="img" aria-label="${p.name}, ${p.label}">
   <g class="pg-all">
-    <ellipse cx="120" cy="290" rx="${60*p.scale}" ry="7" fill="rgba(22,50,74,.14)"/>
-    <g transform="translate(120 288) scale(${p.scale}) translate(-120 -288)">
-    ${both(`<ellipse cx="96" cy="282" rx="20" ry="10" fill="${p.feet}"/><path d="M84 284 v4 M94 285 v5" stroke="rgba(0,0,0,.18)" stroke-width="2.5" stroke-linecap="round"/>`)}
-    <ellipse cx="120" cy="${bcy}" rx="${p.bx}" ry="${p.by}" fill="${p.body}"/>
-    <ellipse cx="120" cy="${282-p.by*.8}" rx="${p.bx*.72}" ry="${p.by*.78}" fill="${p.belly}"/>
-    <circle cx="120" cy="${HY}" r="${p.hr}" fill="${p.head||p.body}"/>
+    <ellipse cx="124" cy="290" rx="${64*p.scale}" ry="8" fill="rgba(22,50,74,.22)" filter="url(#sketch)"/><ellipse cx="128" cy="290" rx="${56*p.scale}" ry="6" fill="url(#hatch)" filter="url(#sketch)"/>
+    <g transform="translate(120 288) scale(${p.scale}) translate(-120 -288)" filter="url(#sketch)">
+    ${both(`<ellipse cx="96" cy="282" rx="20" ry="10" fill="${p.feet}" ${OL}/><path d="M84 284 v4 M94 285 v5" stroke="rgba(0,0,0,.18)" stroke-width="2.5" stroke-linecap="round"/>`)}
+    ${shade(`<ellipse cx="120" cy="${bcy}" rx="${p.bx}" ry="${p.by}" fill="${p.body}"/>`)}
+    ${shade(`<ellipse cx="120" cy="${282-p.by*.8}" rx="${p.bx*.72}" ry="${p.by*.78}" fill="${p.belly}"/>`, true)}
+    ${shade(`<circle cx="120" cy="${HY}" r="${p.hr}" fill="${p.head||p.body}"/>`)}
     ${mask}
     ${p.extra==="kaiser"||p.extra==="afra"||p.extra==="zora"||p.extra==="gentoo" ? extras[p.extra] : ""}
     ${both(`<ellipse cx="80" cy="130" rx="12" ry="7.5" fill="#ff8fa6" opacity="${dark?.55:.7}"/>`)}
@@ -454,8 +517,8 @@ function penguinSVG(key, mood, accKey){
     <g class="m-r">${bk(`<path d="M104 119 Q120 110 136 119 L120 125Z"/><ellipse cx="120" cy="130" rx="10" ry="7" fill="#7a1f26" stroke="none"/><path d="M108 131 Q120 146 132 131Z"/>`)}</g>
     ${p.extra==="rocky"||p.extra==="chick" ? extras[p.extra] : ""}
     ${accs[acc] || ""}
-    <g class="flip flipL" style="transform-origin:${sx}px 164px"><path d="${flip(sx,1)}" fill="${p.body}"/></g>
-    <g class="flip flipR" style="transform-origin:${rxs}px 164px"><path d="${flip(rxs,-1)}" fill="${p.body}"/></g>
+    <g class="flip flipL" style="transform-origin:${sx}px 164px">${shade(`<path d="${flip(sx,1)}" fill="${p.body}"/>`)}</g>
+    <g class="flip flipR" style="transform-origin:${rxs}px 164px">${shade(`<path d="${flip(rxs,-1)}" fill="${p.body}"/>`)}</g>
     <g class="m-g"><path class="spark" d="M204 54 l4 10 10 4 -10 4 -4 10 -4 -10 -10 -4 10 -4Z" fill="#f7c948"/><path class="spark" style="animation-delay:.6s" d="M32 74 l3 7 7 3 -7 3 -3 7 -3 -7 -7 -3 7 -3Z" fill="#7cc6ee"/><path class="spark" style="animation-delay:1.1s" d="M196 150 a5 5 0 0 1 8 -5 a5 5 0 0 1 8 5 q0 5 -8 10 q-8 -5 -8 -10Z" fill="#ff8fa6"/></g>
     <g class="m-y"><path d="M186 66 q8 12 0 18 q-8 -6 0 -18Z" fill="#7cc6ee"/></g>
     <g class="m-r"><g class="burst"><path d="M14 90 q-10 20 0 40 M4 82 q-14 28 0 56" stroke="#e3434a" stroke-width="5" fill="none" stroke-linecap="round"/></g>
@@ -464,7 +527,7 @@ function penguinSVG(key, mood, accKey){
   </g></svg>`;
 }
 
-const FISH = `<svg viewBox="0 0 44 26" aria-hidden="true"><path d="M3 13 Q16 0 31 13 Q16 26 3 13Z" fill="#ff8a3d"/><path d="M29 13 L42 4 L40 13 L42 22Z" fill="#ff8a3d"/><path d="M16 7 Q20 13 16 19" stroke="#e86d1f" stroke-width="2" fill="none"/><circle cx="10" cy="11" r="2.2" fill="#16324a"/></svg>`;
+const FISH = `<svg viewBox="0 0 44 26" aria-hidden="true"><g filter="url(#sketch)"><path d="M29 13 L42 4 L40 13 L42 22Z" fill="#ff8a3d" stroke="#15202c" stroke-width="1.6" stroke-linejoin="round"/><path d="M3 13 Q16 0 31 13 Q16 26 3 13Z" fill="#ff8a3d" stroke="#15202c" stroke-width="1.6"/><path d="M5 14 Q16 25 30 14 Q16 21 5 14Z" fill="#c95d17" opacity=".55"/><path d="M16 7 Q20 13 16 19" stroke="#e86d1f" stroke-width="2" fill="none"/><circle cx="10" cy="11" r="2.2" fill="#16324a"/></g></svg>`;
 
 /* ---------- Zustand ---------- */
 const PRESETS = { still:{yellow:25,red:42}, partner:{yellow:38,red:58}, gruppe:{yellow:50,red:72} };
