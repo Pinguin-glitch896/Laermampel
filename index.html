@@ -86,9 +86,11 @@ main{flex:1;display:grid;grid-template-columns:150px minmax(0,1fr) 330px;gap:16p
 .status h2{font-family:var(--display);font-weight:800;font-size:clamp(1.8rem,4vw,3.2rem);line-height:1.05;margin:0;text-wrap:balance;transition:color .3s}
 .status p{margin:0;font-size:clamp(1rem,1.6vw,1.35rem);font-weight:700;color:var(--ink2)}
 .z0 .status h2{color:var(--go)} .z1 .status h2{color:#b97f00} .z2 .status h2{color:var(--stop)}
-.pengbox{position:relative;flex:1;width:100%;display:flex;align-items:flex-end;justify-content:center;min-height:0}
+.pengbox{position:relative;flex:1 1 0;width:100%;min-height:200px}
+#mainPengHolder{position:absolute;left:0;right:0;top:0;bottom:22px;display:flex;align-items:flex-end;justify-content:center}
 .floe{position:absolute;bottom:0;left:50%;transform:translateX(-50%);width:min(500px,88%);height:54px;background:linear-gradient(180deg,#ffffff 0%,#eef8fd 60%,#d5ecf8 100%);border-radius:50%/60% 60% 40% 40%;box-shadow:0 10px 0 #9fd0ec, 0 22px 0 #7fbde2, 0 34px 22px rgba(10,50,80,.35)}
-#mainPeng{position:relative;height:min(46vh,380px);width:auto;max-width:100%;margin-bottom:22px}
+#mainPeng{position:relative;height:100%;max-height:400px;width:auto;max-width:100%}
+.stage > .status{z-index:3}
 .meter{position:relative;width:min(560px,100%);margin-top:14px}
 .stage > .meter{background:rgba(255,255,255,.88);border-radius:18px;padding:10px 14px 6px}
 .meter-track{position:relative;height:22px;border-radius:999px;background:linear-gradient(90deg,#d6efe1,#fbedc8 60%,#f8d3d4);overflow:hidden;border:2px solid var(--line)}
@@ -223,7 +225,7 @@ body{background-image:var(--paper),radial-gradient(1200px 500px at 15% -10%,#fff
   .lamp{width:56px;height:56px}
   .pole{display:none}
   .stage{min-height:380px}
-  #mainPeng{height:260px}
+  .pengbox{min-height:260px}
 }
 @media (prefers-reduced-motion:reduce){
   *,*::before,*::after{animation:none!important;transition:none!important}
