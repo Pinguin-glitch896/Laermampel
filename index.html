@@ -342,7 +342,8 @@ main{flex:1;display:grid;grid-template-columns:150px minmax(0,1fr) 330px;gap:16p
       </div>
     </div>
     <label class="check"><input type="checkbox" id="sYellowHalf"> Bei Gelb füllt sich der Balken halb so schnell</label>
-    <label class="check"><input type="checkbox" id="sSound"> Töne abspielen (Fisch, Ziel erreicht, zu laut)</label>
+    <label class="check"><input type="checkbox" id="sCall"> Pinguin-Ruf bei Rot <button class="btn" type="button" id="btnCallTest" style="padding:4px 12px;font-size:.9rem">Anhören</button></label>
+    <label class="check"><input type="checkbox" id="sSound"> Töne für Fische und Ziel abspielen</label>
     <div class="start-row"><button class="btn primary" type="button" id="btnSetDone">Fertig</button></div>
   </div>
 </div>
@@ -462,7 +463,7 @@ const FISH = `<svg viewBox="0 0 44 26" aria-hidden="true"><path d="M3 13 Q16 0 3
 
 /* ---------- Zustand ---------- */
 const PRESETS = { still:{yellow:25,red:42}, partner:{yellow:38,red:58}, gruppe:{yellow:50,red:72} };
-const DEFAULTS = { variant:"gustav", acc:"", yellow:38, red:58, sens:0, hold:1.5, minutes:3, goal:10, penalty:"pause", yellowHalf:true, sound:false, preset:"partner" };
+const DEFAULTS = { variant:"gustav", acc:"", yellow:38, red:58, sens:0, hold:1.5, minutes:3, goal:10, penalty:"pause", yellowHalf:true, sound:false, call:true, preset:"partner" };
 let S = Object.assign({}, DEFAULTS);
 let R = { fish:0, progress:0, quiet:0, reds:0 };
 try{ const s = JSON.parse(localStorage.getItem("pla-settings")||"null"); if(s) S = Object.assign(S, s);
@@ -501,7 +502,7 @@ function updateStatus(){
 }
 function setZone(z){
   if(z===zone) return;
-  if(z===2){ R.reds++; if(S.sound) tones([520,390],.18,.08); }
+  if(z===2){ R.reds++; if(S.call) penguinCall(); }
   zone = z;
   $("app").className = "z"+z;
   $("lampG").classList.toggle("on", z===0);
@@ -554,6 +555,64 @@ let toastTimer;
 function toast(html){ const el=$("toast"); el.innerHTML=html; el.hidden=false; clearTimeout(toastTimer); toastTimer=setTimeout(()=>el.hidden=true,2600); }
 
 /* ---------- Töne ---------- */
+
+/* Pinguin-Ruf: synthetisiertes Trompeten wie bei Brillen- und Eselspinguinen (kurze Rufe, dann langes Schreien) */
+let lastCall = 0, callUntil = 0;
+function penguinCall(force){
+  const nowMs = performance.now();
+  if(!force && nowMs - lastCall < 8000) return;
+  lastCall = nowMs;
+  try{
+    const ctx = audioCtx || (audioCtx = new (window.AudioContext||window.webkitAudioContext)());
+    if(ctx.state === "suspended") ctx.resume();
+    const out = ctx.createGain(); out.gain.value = .55;
+    const comp = ctx.createDynamicsCompressor();
+    out.connect(comp).connect(ctx.destination);
+    // Formanten: geben dem Ton den nasalen "Aah"-Klang
+    const f1 = ctx.createBiquadFilter(); f1.type="bandpass"; f1.frequency.value=950;  f1.Q.value=4;
+    const f2 = ctx.createBiquadFilter(); f2.type="bandpass"; f2.frequency.value=2300; f2.Q.value=5;
+    const f3 = ctx.createBiquadFilter(); f3.type="lowpass";  f3.frequency.value=600;
+    const g2 = ctx.createGain(); g2.gain.value=.6;
+    f1.connect(out); f2.connect(g2).connect(out); f3.connect(out);
+    // Rauschen für den rauen Atem
+    const nb = ctx.createBuffer(1, ctx.sampleRate*2, ctx.sampleRate), nd = nb.getChannelData(0);
+    for(let i=0;i<nd.length;i++) nd[i] = Math.random()*2-1;
+
+    function honk(t0, dur, f0, fEnd, loud, rasp){
+      const o = ctx.createOscillator(); o.type = "sawtooth";
+      o.frequency.setValueAtTime(f0*.85, t0);
+      o.frequency.linearRampToValueAtTime(f0, t0+dur*.25);
+      o.frequency.linearRampToValueAtTime(fEnd, t0+dur);
+      // schnelles Flattern macht den Ton kratzig wie bei einem echten Pinguin
+      const lfo = ctx.createOscillator(); lfo.frequency.value = rasp;
+      const lg = ctx.createGain(); lg.gain.value = f0*.06;
+      lfo.connect(lg).connect(o.frequency);
+      const am = ctx.createGain(); am.gain.value = .7;
+      const amL = ctx.createOscillator(); amL.frequency.value = rasp*1.1;
+      const amG = ctx.createGain(); amG.gain.value = .3;
+      amL.connect(amG).connect(am.gain);
+      const env = ctx.createGain();
+      env.gain.setValueAtTime(0.0001, t0);
+      env.gain.exponentialRampToValueAtTime(loud, t0+.03);
+      env.gain.setValueAtTime(loud, t0+dur*.7);
+      env.gain.exponentialRampToValueAtTime(0.0001, t0+dur);
+      o.connect(am).connect(env);
+      const n = ctx.createBufferSource(); n.buffer = nb;
+      const ng = ctx.createGain(); ng.gain.value = .12;
+      n.connect(ng).connect(env);
+      env.connect(f1); env.connect(f2); env.connect(f3);
+      for(const s of [o,lfo,amL,n]){ s.start(t0); s.stop(t0+dur+.05); }
+    }
+    let t = ctx.currentTime + .02;
+    // "ha – ha – ha – haaaaaa"
+    honk(t,       .16, 330, 300, .9, 28);
+    honk(t+.24,   .16, 345, 310, .9, 28);
+    honk(t+.48,   .18, 360, 320, .9, 30);
+    honk(t+.74,   .85, 400, 250, 1,  34);
+    callUntil = nowMs + 1800;
+  }catch(e){}
+}
+
 function tones(freqs, dur, vol){
   try{
     const ctx = audioCtx || (audioCtx = new (window.AudioContext||window.webkitAudioContext)());
@@ -596,6 +655,7 @@ async function keepAwake(){ try{ if("wakeLock" in navigator) wakeLock = await na
 document.addEventListener("visibilitychange",()=>{ if(document.visibilityState==="visible" && started) keepAwake(); });
 
 function begin(){
+  try{ audioCtx = audioCtx || new (window.AudioContext||window.webkitAudioContext)(); audioCtx.resume(); }catch(e){}
   started = true; running = true;
   $("pickOverlay").hidden = true;
   $("btnPause").disabled = false; $("btnPause").textContent = "Pause";
@@ -619,7 +679,8 @@ let last = performance.now();
 function loop(now){
   const dt = Math.min(.25, (now-last)/1000); last = now;
   if(started){
-    const raw = readLevel();
+    // Während der Pinguin ruft, wird das Mikrofon ignoriert, damit der Ruf nicht selbst als Lärm zählt
+    const raw = performance.now() < callUntil ? level : readLevel();
     level += (raw-level) * (raw>level ? .3 : .06);
     const pct = level.toFixed(1)+"%";
     $("meterFill").style.width = pct; $("meterFill2").style.width = pct;
@@ -708,7 +769,7 @@ const fields = [
 ];
 function syncSettings(){
   for(const [id,key,out,f] of fields){ $(id).value = S[key]; $(out).textContent = f(S[key]); }
-  $("sYellowHalf").checked = S.yellowHalf; $("sSound").checked = S.sound;
+  $("sYellowHalf").checked = S.yellowHalf; $("sSound").checked = S.sound; $("sCall").checked = S.call;
   document.querySelectorAll("#presets button").forEach(b=>b.setAttribute("aria-pressed", String(b.dataset.p===S.preset)));
   document.querySelectorAll("#penalty button").forEach(b=>b.setAttribute("aria-pressed", String(b.dataset.v===S.penalty)));
   renderMarks();
@@ -726,6 +787,8 @@ for(const [id,key] of fields){
 $("presets").addEventListener("click",e=>{ const p=e.target.closest("button"); if(!p) return; S.preset=p.dataset.p; Object.assign(S,PRESETS[p.dataset.p]); syncSettings(); save(); });
 $("penalty").addEventListener("click",e=>{ const p=e.target.closest("button"); if(!p) return; S.penalty=p.dataset.v; syncSettings(); renderStats(); save(); });
 $("sYellowHalf").addEventListener("change",e=>{ S.yellowHalf=e.target.checked; renderStats(); save(); });
+$("sCall").addEventListener("change",e=>{ S.call=e.target.checked; save(); });
+$("btnCallTest").addEventListener("click",e=>{ e.preventDefault(); penguinCall(true); });
 $("sSound").addEventListener("change",e=>{ S.sound=e.target.checked; save(); if(S.sound) tones([660,880],.1,.06); });
 
 /* ---------- Bedienung ---------- */
