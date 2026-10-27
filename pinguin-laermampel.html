@@ -154,11 +154,15 @@ main{flex:1;display:grid;grid-template-columns:150px minmax(0,1fr) 330px;gap:16p
 .sheet{background:var(--snow);border-radius:28px;padding:24px;width:min(860px,100%);max-height:calc(100% - 8px);overflow:auto;display:flex;flex-direction:column;gap:16px;box-shadow:0 20px 60px rgba(0,0,0,.25)}
 .sheet h2{font-family:var(--display);font-weight:800;font-size:2rem;margin:0;line-height:1.1}
 .sheet p{margin:0;line-height:1.5}
-.variants{display:grid;grid-template-columns:repeat(auto-fill,minmax(120px,1fr));gap:12px}
+.variants{display:grid;grid-template-columns:repeat(auto-fill,minmax(150px,1fr));gap:12px}
 .variant{border:3px solid var(--line);background:var(--sky2);border-radius:20px;padding:10px 6px 8px;display:flex;flex-direction:column;align-items:center;gap:4px;color:var(--ink)}
 .variant svg{width:100%;height:110px}
 .variant b{font-family:var(--display);font-size:1.05rem;line-height:1.1}
-.variant small{color:var(--ink2);font-weight:700}
+.variant small{color:var(--ink2);font-weight:800;font-size:.8rem;text-transform:uppercase;letter-spacing:.05em}
+.variant em{font-style:normal;font-size:.85rem;color:var(--ink);text-align:center;line-height:1.25}
+.pick-h{margin:0 0 -6px;font-family:var(--display);font-size:1.15rem}
+.accs{grid-template-columns:repeat(auto-fill,minmax(110px,1fr))}
+.accs .variant svg{height:84px}
 .variant[aria-pressed="true"]{border-color:var(--sea);background:#d8eefb;box-shadow:0 4px 0 var(--sea)}
 .start-row{display:flex;flex-wrap:wrap;gap:10px;align-items:center}
 .err{background:#fde6e7;color:#8f1f25;border-radius:14px;padding:10px 14px;font-weight:700}
@@ -292,7 +296,10 @@ main{flex:1;display:grid;grid-template-columns:150px minmax(0,1fr) 330px;gap:16p
 <div class="overlay" id="pickOverlay">
   <div class="sheet" role="dialog" aria-modal="true" aria-labelledby="pickTitle">
     <h2 id="pickTitle">Welcher Pinguin hört heute zu?</h2>
+    <h3 class="pick-h">Pinguinart</h3>
     <div class="variants" id="variants"></div>
+    <h3 class="pick-h">Verkleidung</h3>
+    <div class="variants accs" id="accs"></div>
     <div class="start-row" id="startRow">
       <button class="btn primary" type="button" id="btnStartMic"><svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.4" stroke-linecap="round"><rect x="9" y="3" width="6" height="11" rx="3"/><path d="M5 11a7 7 0 0 0 14 0M12 18v3"/></svg>Mit Mikrofon starten</button>
       <button class="btn" type="button" id="btnStartDemo">Ohne Mikrofon testen</button>
@@ -357,57 +364,97 @@ main{flex:1;display:grid;grid-template-columns:150px minmax(0,1fr) 330px;gap:16p
 (function(){
 "use strict";
 
-/* ---------- Pinguin-Varianten ---------- */
+/* ---------- Pinguinarten ---------- */
+const INK = "#16324a";
 const VARIANTS = {
-  pino:   {name:"Pino",          label:"Klassisch",     body:"#1f3247", belly:"#ffffff", acc:""},
-  kaiser: {name:"Kaiser Karl",   label:"Kaiserpinguin", body:"#24313f", belly:"#fffaf0", acc:"kaiser"},
-  mia:    {name:"Mia",           label:"Mit Mütze",     body:"#1f3247", belly:"#ffffff", acc:"hat"},
-  lotte:  {name:"Königin Lotte", label:"Mit Krone",     body:"#2b2f5e", belly:"#ffffff", acc:"crown"},
-  paul:   {name:"Professor Paul",label:"Mit Brille",    body:"#25403a", belly:"#ffffff", acc:"glasses"},
-  flocke: {name:"Flocke",        label:"Pinguin-Baby",  body:"#8d9cab", belly:"#f3f6f9", acc:"baby"},
-  kosmo:  {name:"Kosmo",         label:"Astronaut",     body:"#1f3247", belly:"#ffffff", acc:"helmet"}
+  gustav: {name:"Gustav",     label:"Eselspinguin",   fact:"Der schnellste Schwimmer",  body:"#26394b", belly:"#ffffff", face:"dark", eye:INK, ring:"#ffffff", ringR:12, beak:"#ff7a1a", beakS:1.1, feet:"#ff8a2a", rx:78, ry:110, cy:170, scale:1,   extra:"gentoo"},
+  kaiser: {name:"Kaiser Karl",label:"Kaiserpinguin",  fact:"Der Größte von allen",      body:"#1c2735", belly:"#fffaf0", face:"dark", eye:"#ffffff", beak:"#2a3340", beakStroke:"#f39c33", beakS:1.05, feet:"#2a3340", rx:70, ry:118, cy:165, scale:1.04, extra:"kaiser"},
+  rocky:  {name:"Rocky",      label:"Felsenpinguin",  fact:"Hüpft über Felsen",         body:"#262c35", belly:"#ffffff", face:"dark", eye:"#ff4b3e", beak:"#e8572a", beakS:1.2, feet:"#f4a6b8", rx:80, ry:104, cy:176, scale:.86, extra:"rocky"},
+  adele:  {name:"Adele",      label:"Adeliepinguin",  fact:"Baut Nester aus Steinen",   body:"#1a2230", belly:"#ffffff", face:"dark", eye:INK, ring:"#ffffff", ringR:15, beak:"#3a3f4a", beakStroke:"#e0673a", beakS:1, feet:"#f3b2c0", rx:88, ry:104, cy:178, scale:.95, extra:""},
+  blu:    {name:"Blu",        label:"Zwergpinguin",   fact:"Der Kleinste von allen",    body:"#4b7fb3", belly:"#ffffff", face:"dark", eye:INK, ring:"#dfeaf4", ringR:13, beak:"#3a4250", beakS:.9, feet:"#f3b2c0", rx:80, ry:106, cy:174, scale:.74, extra:""},
+  afra:   {name:"Afra",       label:"Brillenpinguin", fact:"Lebt in Afrika am Strand",  body:"#1f2530", belly:"#ffffff", face:"dark", eye:INK, ring:"#ffffff", ringR:12, beak:"#2b2f38", beakS:1, feet:"#2b2f38", rx:78, ry:108, cy:172, scale:.92, extra:"afra"},
+  zora:   {name:"Zora",       label:"Zügelpinguin",   fact:"Trägt einen Kinnriemen",    body:"#232c38", belly:"#ffffff", face:"mask", eye:INK, beak:"#2b2f38", beakS:.95, feet:"#f3b2c0", rx:80, ry:108, cy:172, scale:.95, extra:"zora", mask:[110,54,40]},
+  flocke: {name:"Flocke",     label:"Pinguin-Küken",  fact:"Ganz weich und flauschig",  body:"#a7b2bd", belly:"#e3e8ec", face:"mask", eye:INK, eyeR:11, beak:"#2b2f38", beakS:.85, feet:"#7d8894", rx:84, ry:100, cy:180, scale:.8, extra:"chick", mask:[116,46,34]}
 };
+const ACCS = {
+  "":      "Keine",
+  hat:     "Mütze & Schal",
+  crown:   "Krone",
+  glasses: "Brille & Fliege",
+  helmet:  "Astronaut"
+};
+const both = s => s + `<g transform="translate(240 0) scale(-1 1)">${s}</g>`;
 
-function penguinSVG(key, mood){
-  const p = VARIANTS[key] || VARIANTS.pino;
-  const baby = p.acc === "baby";
-  const er = baby ? 11 : 9;
-  const acc = {
-    kaiser:`<ellipse cx="76" cy="112" rx="9" ry="17" fill="#f7b733"/><ellipse cx="164" cy="112" rx="9" ry="17" fill="#f7b733"/><ellipse cx="120" cy="158" rx="30" ry="8" fill="#ffe1a1" opacity=".8"/>`,
-    hat:`<path d="M60 152 Q120 176 180 152 L182 168 Q120 194 58 168Z" fill="#e3434a"/><rect x="140" y="160" width="18" height="44" rx="6" fill="#e3434a" transform="rotate(-8 149 160)"/><path d="M145 196h14M146 188h13" stroke="#fff" stroke-width="3"/>
-         <path d="M70 90 Q120 26 170 90Z" fill="#e3434a"/><path d="M84 66 L156 66" stroke="#fff" stroke-width="5" opacity=".9"/><rect x="66" y="80" width="108" height="18" rx="9" fill="#fff"/><circle cx="120" cy="42" r="13" fill="#fff"/>`,
-    crown:`<path d="M84 74 L92 40 L106 60 L120 32 L134 60 L148 40 L156 74Z" fill="#f7c948" stroke="#c99a17" stroke-width="3" stroke-linejoin="round"/><circle cx="120" cy="58" r="5" fill="#e3434a"/><circle cx="99" cy="64" r="4" fill="#2b6e9a"/><circle cx="141" cy="64" r="4" fill="#2b6e9a"/>`,
-    glasses:`<circle cx="100" cy="106" r="16" fill="rgba(220,240,250,.3)" stroke="#16324a" stroke-width="4"/><circle cx="140" cy="106" r="16" fill="rgba(220,240,250,.3)" stroke="#16324a" stroke-width="4"/><path d="M116 104 Q120 100 124 104" stroke="#16324a" stroke-width="4" fill="none"/>
-         <path d="M98 160 L120 172 L142 160 L142 176 L120 168 L98 176Z" fill="#e3434a"/><circle cx="120" cy="170" r="5" fill="#b02a30"/>`,
-    baby:`<path d="M108 70 Q112 50 120 64 Q126 46 132 68" fill="none" stroke="${p.body}" stroke-width="7" stroke-linecap="round"/>`,
-    helmet:`<circle cx="120" cy="112" r="64" fill="rgba(170,215,245,.22)" stroke="#cbd8e4" stroke-width="7"/><path d="M80 82 Q92 64 112 58" stroke="#fff" stroke-width="6" fill="none" stroke-linecap="round" opacity=".9"/><rect x="88" y="168" width="64" height="12" rx="6" fill="#cbd8e4"/><line x1="120" y1="48" x2="120" y2="26" stroke="#cbd8e4" stroke-width="4"/><circle cx="120" cy="22" r="7" fill="#e3434a"/>`
-  }[p.acc] || "";
-  return `<svg class="peng mood-${mood||"g"}" viewBox="0 0 240 300" role="img" aria-label="${p.name}">
+function penguinSVG(key, mood, accKey){
+  const p = VARIANTS[key] || VARIANTS.gustav;
+  const acc = accKey === undefined ? S.acc : accKey;
+  const top = p.cy - p.ry, dark = p.face === "dark";
+  const er = p.eyeR || 9;
+  const lightEye = p.eye !== INK;
+  const line = (dark && !p.ring) ? p.eye : INK;
+  const brow = dark ? (p.ring ? "#ffffff" : p.eye) : INK;
+  const sx = 120 - p.rx + 16, rxs = 240 - sx;
+  const belly = dark
+    ? `<ellipse cx="120" cy="${p.cy+40}" rx="${p.rx*.68}" ry="${p.ry*.62}" fill="${p.belly}"/>`
+    : `<ellipse cx="120" cy="${p.cy+28}" rx="${p.rx*.7}" ry="${p.ry*.72}" fill="${p.belly}"/>`;
+  const m = p.mask || [113,51,39];
+
+  const extras = {
+    kaiser: both(`<ellipse cx="74" cy="114" rx="9" ry="19" fill="#f9b234" transform="rotate(-12 74 114)"/>`) +
+            `<ellipse cx="120" cy="${p.cy+40-p.ry*.62+30}" rx="38" ry="14" fill="#ffd66b" opacity=".75"/>`,
+    rocky:  `<path d="M102 ${top+2} L107 ${top-18} L114 ${top-2} L120 ${top-22} L126 ${top-2} L133 ${top-18} L138 ${top+2}Z" fill="${p.body}"/>` +
+            both(`<path d="M106 86 Q92 70 76 72 M104 89 Q86 80 70 86 M103 92 Q86 90 72 98" stroke="#ffd23f" stroke-width="4.5" fill="none" stroke-linecap="round"/>`),
+    gentoo: `<path d="M88 88 Q120 66 152 88" stroke="#ffffff" stroke-width="9" fill="none" stroke-linecap="round"/>`,
+    afra:   both(`<path d="M102 82 Q70 90 78 128" stroke="#ffffff" stroke-width="7" fill="none" stroke-linecap="round"/><ellipse cx="97" cy="90" rx="7" ry="4" fill="#f49ab0"/>`) +
+            `<path d="M76 172 Q120 204 164 172" stroke="${p.body}" stroke-width="8" fill="none" stroke-linecap="round"/><circle cx="104" cy="214" r="3" fill="${p.body}"/><circle cx="140" cy="228" r="3" fill="${p.body}"/><circle cx="126" cy="240" r="2.5" fill="${p.body}"/>`,
+    zora:   `<path d="M74 122 Q120 160 166 122" stroke="${p.body}" stroke-width="3.5" fill="none" stroke-linecap="round"/>`,
+    chick:  both(`<circle cx="${120-p.rx+6}" cy="190" r="9" fill="${p.body}"/><circle cx="${120-p.rx+10}" cy="225" r="8" fill="${p.body}"/>`) +
+            `<path d="M110 ${top+4} Q112 ${top-14} 120 ${top-2} Q126 ${top-18} 132 ${top+4}" fill="none" stroke="#1d2a38" stroke-width="7" stroke-linecap="round"/>`
+  };
+  const cap = p.extra === "chick" ? `<ellipse cx="120" cy="${top+34}" rx="70" ry="42" fill="#1d2a38"/>` : "";
+  const mask = dark ? "" : `<ellipse cx="120" cy="${m[0]}" rx="${m[1]}" ry="${m[2]}" fill="${p.belly}"/>`;
+  const rings = p.ring ? both(`<circle cx="100" cy="106" r="${p.ringR}" fill="${p.ring}"/>`) : "";
+
+  const openEye = both(`<circle cx="100" cy="106" r="${er}" fill="${p.eye}"/>` +
+      (lightEye ? `<circle cx="101" cy="107" r="${er*.55}" fill="${INK}"/>` : "") +
+      `<circle cx="${lightEye?103:103}" cy="102" r="2.6" fill="#fff"/>`);
+
+  const hatOff = Math.min(0, top-64), crownOff = top-64;
+  const accs = {
+    hat: `<path d="M60 152 Q120 176 180 152 L182 168 Q120 194 58 168Z" fill="#e3434a"/><rect x="140" y="160" width="18" height="44" rx="6" fill="#e3434a" transform="rotate(-8 149 160)"/><path d="M145 196h14M146 188h13" stroke="#fff" stroke-width="3"/>
+          <g transform="translate(0 ${hatOff})"><path d="M70 90 Q120 26 170 90Z" fill="#e3434a"/><path d="M84 66 L156 66" stroke="#fff" stroke-width="5" opacity=".9"/><rect x="66" y="78" width="108" height="18" rx="9" fill="#fff"/><circle cx="120" cy="42" r="13" fill="#fff"/></g>`,
+    crown: `<g transform="translate(0 ${crownOff})"><path d="M84 74 L92 40 L106 60 L120 32 L134 60 L148 40 L156 74Z" fill="#f7c948" stroke="#c99a17" stroke-width="3" stroke-linejoin="round"/><circle cx="120" cy="58" r="5" fill="#e3434a"/><circle cx="99" cy="64" r="4" fill="#2b6e9a"/><circle cx="141" cy="64" r="4" fill="#2b6e9a"/></g>`,
+    glasses: both(`<circle cx="100" cy="106" r="17" fill="rgba(220,240,250,.25)" stroke="#e8a917" stroke-width="4"/>`) +
+          `<path d="M117 104 Q120 100 123 104" stroke="#e8a917" stroke-width="4" fill="none"/><path d="M98 160 L120 172 L142 160 L142 176 L120 168 L98 176Z" fill="#e3434a"/><circle cx="120" cy="170" r="5" fill="#b02a30"/>`,
+    helmet: `<circle cx="120" cy="112" r="66" fill="rgba(170,215,245,.22)" stroke="#cbd8e4" stroke-width="7"/><path d="M78 82 Q90 62 112 56" stroke="#fff" stroke-width="6" fill="none" stroke-linecap="round" opacity=".9"/><rect x="88" y="170" width="64" height="12" rx="6" fill="#cbd8e4"/><line x1="120" y1="46" x2="120" y2="24" stroke="#cbd8e4" stroke-width="4"/><circle cx="120" cy="20" r="7" fill="#e3434a"/>`
+  };
+  const bk = s => `<g transform="translate(120 124) scale(${p.beakS}) translate(-120 -124)" fill="${p.beak}" stroke="${p.beakStroke||"none"}" stroke-width="2">${s}</g>`;
+
+  return `<svg class="peng mood-${mood||"g"}" viewBox="0 0 240 300" role="img" aria-label="${p.name}, ${p.label}">
   <g class="pg-all">
-    <ellipse cx="120" cy="290" rx="72" ry="7" fill="rgba(22,50,74,.14)"/>
-    <ellipse cx="94" cy="283" rx="23" ry="9" fill="#f59a23"/><ellipse cx="146" cy="283" rx="23" ry="9" fill="#f59a23"/>
-    <ellipse cx="120" cy="172" rx="80" ry="108" fill="${p.body}"/>
-    <ellipse cx="120" cy="200" rx="56" ry="78" fill="${p.belly}"/>
-    <ellipse cx="120" cy="113" rx="51" ry="39" fill="${p.belly}"/>
-    <ellipse cx="84" cy="126" rx="9" ry="6" fill="#ff9fb0" opacity=".6"/><ellipse cx="156" cy="126" rx="9" ry="6" fill="#ff9fb0" opacity=".6"/>
-    <!-- Augen -->
-    <g class="m-g"><path d="M89 109 Q100 95 111 109" stroke="#16324a" stroke-width="5" fill="none" stroke-linecap="round"/><path d="M129 109 Q140 95 151 109" stroke="#16324a" stroke-width="5" fill="none" stroke-linecap="round"/></g>
-    <g class="m-y"><circle cx="100" cy="106" r="${er}" fill="#16324a"/><circle cx="140" cy="106" r="${er}" fill="#16324a"/><circle cx="103" cy="102" r="3" fill="#fff"/><circle cx="143" cy="102" r="3" fill="#fff"/>
-      <path d="M88 ${baby?88:91} L108 84" stroke="#16324a" stroke-width="4" stroke-linecap="round"/><path d="M152 ${baby?88:91} L132 84" stroke="#16324a" stroke-width="4" stroke-linecap="round"/></g>
-    <g class="m-r"><path d="M90 98 L108 106 L90 114" stroke="#16324a" stroke-width="5" fill="none" stroke-linecap="round" stroke-linejoin="round"/><path d="M150 98 L132 106 L150 114" stroke="#16324a" stroke-width="5" fill="none" stroke-linecap="round" stroke-linejoin="round"/></g>
-    <!-- Schnabel -->
-    <g class="m-g"><path d="M105 121 Q120 114 135 121 Q120 140 105 121Z" fill="#f59a23"/></g>
-    <g class="m-y"><path d="M108 121 Q120 116 132 121 Q120 134 108 121Z" fill="#f59a23"/><path d="M110 142 q5 -4 10 0 t10 0" stroke="#16324a" stroke-width="3" fill="none" stroke-linecap="round"/></g>
-    <g class="m-r"><path d="M103 119 Q120 110 137 119 L120 125Z" fill="#f59a23"/><ellipse cx="120" cy="131" rx="11" ry="8" fill="#7a1f26"/><path d="M107 132 Q120 150 133 132Z" fill="#f59a23"/></g>
-    ${acc}
-    <!-- Flossen -->
-    <g class="flip flipL" style="transform-origin:56px 150px"><path d="M58 142 Q18 190 30 242 Q52 224 64 178Z" fill="${p.body}"/></g>
-    <g class="flip flipR" style="transform-origin:184px 150px"><path d="M182 142 Q222 190 210 242 Q188 224 176 178Z" fill="${p.body}"/></g>
-    <!-- Deko je Stimmung -->
+    <ellipse cx="120" cy="290" rx="${66*p.scale}" ry="7" fill="rgba(22,50,74,.14)"/>
+    <g transform="translate(120 288) scale(${p.scale}) translate(-120 -288)">
+    <ellipse cx="94" cy="283" rx="23" ry="9" fill="${p.feet}"/><ellipse cx="146" cy="283" rx="23" ry="9" fill="${p.feet}"/>
+    <ellipse cx="120" cy="${p.cy}" rx="${p.rx}" ry="${p.ry}" fill="${p.body}"/>
+    ${cap}${belly}${mask}
+    ${p.extra==="kaiser"||p.extra==="afra"||p.extra==="zora"||p.extra==="gentoo" ? extras[p.extra] : ""}
+    ${both(`<ellipse cx="84" cy="128" rx="9" ry="6" fill="#ff9fb0" opacity="${dark?.45:.6}"/>`)}
+    ${rings}
+    <g class="m-g">${both(`<path d="M89 109 Q100 95 111 109" stroke="${line}" stroke-width="5" fill="none" stroke-linecap="round"/>`)}</g>
+    <g class="m-y">${openEye}${both(`<path d="M88 ${top>70?92:90} L108 84" stroke="${brow}" stroke-width="4" stroke-linecap="round"/>`)}</g>
+    <g class="m-r">${both(`<path d="M90 98 L108 106 L90 114" stroke="${line}" stroke-width="5" fill="none" stroke-linecap="round" stroke-linejoin="round"/>`)}</g>
+    <g class="m-g">${bk(`<path d="M105 121 Q120 114 135 121 Q120 140 105 121Z"/>`)}</g>
+    <g class="m-y">${bk(`<path d="M108 121 Q120 116 132 121 Q120 134 108 121Z"/>`)}</g>
+    <g class="m-r">${bk(`<path d="M103 119 Q120 110 137 119 L120 125Z"/><ellipse cx="120" cy="131" rx="11" ry="8" fill="#7a1f26" stroke="none"/><path d="M107 132 Q120 150 133 132Z"/>`)}</g>
+    ${p.extra==="rocky"||p.extra==="chick" ? extras[p.extra] : ""}
+    ${accs[acc] || ""}
+    <g class="flip flipL" style="transform-origin:${sx}px 150px"><path d="M${sx+2} 142 Q${sx-38} 190 ${sx-26} 242 Q${sx-4} 224 ${sx+8} 178Z" fill="${p.body}"/></g>
+    <g class="flip flipR" style="transform-origin:${rxs}px 150px"><path d="M${rxs-2} 142 Q${rxs+38} 190 ${rxs+26} 242 Q${rxs+4} 224 ${rxs-8} 178Z" fill="${p.body}"/></g>
     <g class="m-g"><path class="spark" d="M200 60 l4 10 10 4 -10 4 -4 10 -4 -10 -10 -4 10 -4Z" fill="#f7c948"/><path class="spark" style="animation-delay:.6s" d="M36 80 l3 7 7 3 -7 3 -3 7 -3 -7 -7 -3 7 -3Z" fill="#7cc6ee"/></g>
     <g class="m-y"><path d="M186 70 q8 12 0 18 q-8 -6 0 -18Z" fill="#7cc6ee"/></g>
     <g class="m-r"><g class="burst"><path d="M14 90 q-10 20 0 40 M4 82 q-14 28 0 56" stroke="#e3434a" stroke-width="5" fill="none" stroke-linecap="round"/></g>
       <g class="burst"><path d="M226 90 q10 20 0 40 M236 82 q14 28 0 56" stroke="#e3434a" stroke-width="5" fill="none" stroke-linecap="round"/></g></g>
+    </g>
   </g></svg>`;
 }
 
@@ -415,7 +462,7 @@ const FISH = `<svg viewBox="0 0 44 26" aria-hidden="true"><path d="M3 13 Q16 0 3
 
 /* ---------- Zustand ---------- */
 const PRESETS = { still:{yellow:25,red:42}, partner:{yellow:38,red:58}, gruppe:{yellow:50,red:72} };
-const DEFAULTS = { variant:"pino", yellow:38, red:58, sens:0, hold:1.5, minutes:3, goal:10, penalty:"pause", yellowHalf:true, sound:false, preset:"partner" };
+const DEFAULTS = { variant:"gustav", acc:"", yellow:38, red:58, sens:0, hold:1.5, minutes:3, goal:10, penalty:"pause", yellowHalf:true, sound:false, preset:"partner" };
 let S = Object.assign({}, DEFAULTS);
 let R = { fish:0, progress:0, quiet:0, reds:0 };
 try{ const s = JSON.parse(localStorage.getItem("pla-settings")||"null"); if(s) S = Object.assign(S, s);
@@ -428,7 +475,7 @@ let level=0, zone=0, celebrated=false;
 let t = {aboveY:0, aboveR:0, belowY:0, belowR:0};
 
 /* ---------- Darstellung ---------- */
-function name(){ return (VARIANTS[S.variant]||VARIANTS.pino).name; }
+function name(){ return (VARIANTS[S.variant]||VARIANTS.gustav).name; }
 function renderPenguin(){
   $("mainPengHolder").innerHTML = penguinSVG(S.variant, ["g","y","r"][zone]);
   $("mainPengHolder").firstElementChild.id = "mainPeng";
@@ -636,9 +683,17 @@ function renderVariants(){
   for(const [k,v] of Object.entries(VARIANTS)){
     const b = document.createElement("button");
     b.type="button"; b.className="variant"; b.setAttribute("aria-pressed", String(k===S.variant));
-    b.innerHTML = penguinSVG(k,"g") + `<b>${v.name}</b><small>${v.label}</small>`;
+    b.innerHTML = penguinSVG(k,"g") + `<b>${v.name}</b><small>${v.label}</small><em>${v.fact}</em>`;
     b.addEventListener("click",()=>{ S.variant=k; save(); renderVariants(); renderPenguin(); });
     box.appendChild(b);
+  }
+  const ab = $("accs"); ab.innerHTML = "";
+  for(const [k,label] of Object.entries(ACCS)){
+    const b = document.createElement("button");
+    b.type="button"; b.className="variant acc"; b.setAttribute("aria-pressed", String(k===S.acc));
+    b.innerHTML = penguinSVG(S.variant,"g",k) + `<b>${label}</b>`;
+    b.addEventListener("click",()=>{ S.acc=k; save(); renderVariants(); renderPenguin(); });
+    ab.appendChild(b);
   }
 }
 
@@ -706,6 +761,8 @@ document.addEventListener("keydown",e=>{
 });
 
 /* ---------- Start ---------- */
+if(!VARIANTS[S.variant]) S.variant = "gustav";
+if(!(S.acc in ACCS)) S.acc = "";
 celebrated = R.fish >= S.goal;
 renderVariants(); renderPenguin(); renderBucket(); syncSettings(); renderStats();
 requestAnimationFrame(loop);
