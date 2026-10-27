@@ -343,6 +343,7 @@ main{flex:1;display:grid;grid-template-columns:150px minmax(0,1fr) 330px;gap:16p
     </div>
     <label class="check"><input type="checkbox" id="sYellowHalf"> Bei Gelb füllt sich der Balken halb so schnell</label>
     <label class="check"><input type="checkbox" id="sCall"> Pinguin-Ruf bei Rot <button class="btn" type="button" id="btnCallTest" style="padding:4px 12px;font-size:.9rem">Anhören</button></label>
+    <div class="field" style="max-width:360px"><label for="sCallVol">Lautstärke Pinguin-Ruf <output id="oCallVol"></output></label><input type="range" id="sCallVol" min="0.2" max="1.6" step="0.1"></div>
     <label class="check"><input type="checkbox" id="sSound"> Töne für Fische und Ziel abspielen</label>
     <div class="start-row"><button class="btn primary" type="button" id="btnSetDone">Fertig</button></div>
   </div>
@@ -463,7 +464,7 @@ const FISH = `<svg viewBox="0 0 44 26" aria-hidden="true"><path d="M3 13 Q16 0 3
 
 /* ---------- Zustand ---------- */
 const PRESETS = { still:{yellow:25,red:42}, partner:{yellow:38,red:58}, gruppe:{yellow:50,red:72} };
-const DEFAULTS = { variant:"gustav", acc:"", yellow:38, red:58, sens:0, hold:1.5, minutes:3, goal:10, penalty:"pause", yellowHalf:true, sound:false, call:true, preset:"partner" };
+const DEFAULTS = { variant:"gustav", acc:"", yellow:38, red:58, sens:0, hold:1.5, minutes:3, goal:10, penalty:"pause", yellowHalf:true, sound:false, call:true, callVol:1, preset:"partner" };
 let S = Object.assign({}, DEFAULTS);
 let R = { fish:0, progress:0, quiet:0, reds:0 };
 try{ const s = JSON.parse(localStorage.getItem("pla-settings")||"null"); if(s) S = Object.assign(S, s);
@@ -565,9 +566,12 @@ function penguinCall(force){
   try{
     const ctx = audioCtx || (audioCtx = new (window.AudioContext||window.webkitAudioContext)());
     if(ctx.state === "suspended") ctx.resume();
-    const out = ctx.createGain(); out.gain.value = .55;
+    // Kräftig verstärken, Kompressor fängt Spitzen ab, damit nichts verzerrt
+    const out = ctx.createGain(); out.gain.value = 4 * S.callVol;
     const comp = ctx.createDynamicsCompressor();
-    out.connect(comp).connect(ctx.destination);
+    comp.threshold.value = -8; comp.knee.value = 2; comp.ratio.value = 12; comp.attack.value = .002; comp.release.value = .15;
+    const master = ctx.createGain(); master.gain.value = .9;
+    out.connect(comp).connect(master).connect(ctx.destination);
     // Formanten: geben dem Ton den nasalen "Aah"-Klang
     const f1 = ctx.createBiquadFilter(); f1.type="bandpass"; f1.frequency.value=950;  f1.Q.value=4;
     const f2 = ctx.createBiquadFilter(); f2.type="bandpass"; f2.frequency.value=2300; f2.Q.value=5;
@@ -769,7 +773,7 @@ const fields = [
 ];
 function syncSettings(){
   for(const [id,key,out,f] of fields){ $(id).value = S[key]; $(out).textContent = f(S[key]); }
-  $("sYellowHalf").checked = S.yellowHalf; $("sSound").checked = S.sound; $("sCall").checked = S.call;
+  $("sYellowHalf").checked = S.yellowHalf; $("sSound").checked = S.sound; $("sCall").checked = S.call; $("sCallVol").value = S.callVol; $("oCallVol").textContent = Math.round(S.callVol*100)+" %";
   document.querySelectorAll("#presets button").forEach(b=>b.setAttribute("aria-pressed", String(b.dataset.p===S.preset)));
   document.querySelectorAll("#penalty button").forEach(b=>b.setAttribute("aria-pressed", String(b.dataset.v===S.penalty)));
   renderMarks();
@@ -788,6 +792,8 @@ $("presets").addEventListener("click",e=>{ const p=e.target.closest("button"); i
 $("penalty").addEventListener("click",e=>{ const p=e.target.closest("button"); if(!p) return; S.penalty=p.dataset.v; syncSettings(); renderStats(); save(); });
 $("sYellowHalf").addEventListener("change",e=>{ S.yellowHalf=e.target.checked; renderStats(); save(); });
 $("sCall").addEventListener("change",e=>{ S.call=e.target.checked; save(); });
+$("sCallVol").addEventListener("input",e=>{ S.callVol=+e.target.value; $("oCallVol").textContent=Math.round(S.callVol*100)+" %"; save(); });
+$("sCallVol").addEventListener("change",()=>penguinCall(true));
 $("btnCallTest").addEventListener("click",e=>{ e.preventDefault(); penguinCall(true); });
 $("sSound").addEventListener("change",e=>{ S.sound=e.target.checked; save(); if(S.sound) tones([660,880],.1,.06); });
 
