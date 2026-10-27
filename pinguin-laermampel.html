@@ -20,7 +20,7 @@
 *{box-sizing:border-box}
 [hidden]{display:none!important}
 html,body{height:100%}
-body{margin:0;background:linear-gradient(180deg,var(--sky) 0%,var(--sky2) 70%);color:var(--ink);font-family:var(--body);font-size:16px;
+body{margin:0;background:radial-gradient(1200px 500px at 15% -10%,#ffffff 0%,rgba(255,255,255,0) 60%),radial-gradient(900px 600px at 110% 110%,#c6e6f6 0%,rgba(198,230,246,0) 60%),linear-gradient(180deg,var(--sky) 0%,var(--sky2) 70%);color:var(--ink);font-family:var(--body);font-size:16px;
   padding-left:max(16px,env(safe-area-inset-left,0px));padding-right:max(16px,env(safe-area-inset-right,0px));padding-block:12px;
   display:flex;flex-direction:column;gap:12px;overflow-x:hidden}
 button,input,select{font:inherit}
@@ -54,22 +54,50 @@ main{flex:1;display:grid;grid-template-columns:150px minmax(0,1fr) 330px;gap:16p
 
 /* Bühne */
 .stage{position:relative;display:flex;flex-direction:column;align-items:center;justify-content:space-between;padding:16px 20px 18px;overflow:hidden;min-height:420px}
-.snow{position:absolute;inset:0;pointer-events:none}
-.status{position:relative;text-align:center;display:flex;flex-direction:column;gap:2px;min-height:5.2rem}
+.stage{background:#bfe4f6}
+.snow{position:absolute;inset:0;width:100%;height:100%;pointer-events:none;z-index:1}
+.stage > .status,.stage > .pengbox,.stage > .meter,.stage > .demo,.stage > .pausebadge{z-index:2}
+/* Polarlandschaft */
+.scene{position:absolute;inset:0;pointer-events:none;z-index:0}
+.sky{position:absolute;inset:0;transition:opacity 1.2s ease}
+.sky0{background:linear-gradient(180deg,#6cc4ef 0%,#a9dcf5 45%,#e8f7fd 100%)}
+.sky1{background:linear-gradient(180deg,#8fa9d6 0%,#e7b9b0 50%,#fde4bb 100%);opacity:0}
+.sky2{background:linear-gradient(180deg,#56657d 0%,#8796ac 50%,#c4cedb 100%);opacity:0}
+.z1 .sky1,.z2 .sky2{opacity:1}
+.aurora{position:absolute;left:-5%;top:0;width:110%;height:55%;opacity:.55;transition:opacity 1.2s;animation:drift 18s ease-in-out infinite alternate}
+.z1 .aurora{opacity:.2} .z2 .aurora{opacity:0}
+@keyframes drift{to{transform:translateX(4%) scaleY(1.1)}}
+.sun{position:absolute;top:22px;right:9%;width:84px;height:84px;border-radius:50%;background:radial-gradient(circle,#fffbe0 0 38%,rgba(255,240,170,.55) 40%,rgba(255,240,170,0) 70%);transition:opacity 1.2s,transform 1.2s}
+.z1 .sun{transform:translateY(60px);background:radial-gradient(circle,#ffe2b0 0 38%,rgba(255,170,120,.5) 40%,rgba(255,170,120,0) 70%)}
+.z2 .sun{opacity:0}
+.clouds{position:absolute;top:0;left:0;width:100%;height:150px;opacity:0;transition:opacity 1s}
+.z2 .clouds{opacity:1}
+.clouds g{animation:cloud 6s ease-in-out infinite alternate}
+@keyframes cloud{to{transform:translateX(30px)}}
+.bergs{position:absolute;left:0;right:0;bottom:126px;width:100%;height:150px}
+.sea{position:absolute;left:0;right:0;bottom:0;height:132px;background:linear-gradient(180deg,#5fb4e0 0%,#3a88b8 55%,#2b6e9a 100%);transition:filter 1s}
+.z2 .sea{filter:saturate(.6) brightness(.85)}
+.sea::before,.sea::after{content:"";position:absolute;left:0;right:0;background-repeat:repeat-x}
+.sea::before{top:-10px;height:12px;background-image:url("data:image/svg+xml,%3Csvg xmlns='http://www.w3.org/2000/svg' width='120' height='12'%3E%3Cpath d='M0 8 Q30 0 60 8 T120 8 V12 H0Z' fill='%235fb4e0'/%3E%3C/svg%3E");animation:waves 6s linear infinite}
+.sea::after{top:22px;height:60px;opacity:.35;background-image:url("data:image/svg+xml,%3Csvg xmlns='http://www.w3.org/2000/svg' width='120' height='60'%3E%3Cpath d='M8 12 q15 -6 30 0 M70 34 q15 -6 30 0 M30 52 q12 -5 24 0' stroke='white' stroke-width='3' fill='none' stroke-linecap='round'/%3E%3C/svg%3E");animation:waves 9s linear infinite reverse}
+.z2 .sea::before{animation-duration:1.6s} .z2 .sea::after{animation-duration:3s}
+@keyframes waves{to{background-position-x:-120px}}
+.status{position:relative;text-align:center;display:flex;flex-direction:column;gap:2px;min-height:5.2rem;justify-content:center;background:rgba(255,255,255,.78);border-radius:24px;padding:10px 26px;box-shadow:0 6px 20px rgba(22,50,74,.12)}
 .status h2{font-family:var(--display);font-weight:800;font-size:clamp(1.8rem,4vw,3.2rem);line-height:1.05;margin:0;text-wrap:balance;transition:color .3s}
 .status p{margin:0;font-size:clamp(1rem,1.6vw,1.35rem);font-weight:700;color:var(--ink2)}
 .z0 .status h2{color:var(--go)} .z1 .status h2{color:#b97f00} .z2 .status h2{color:var(--stop)}
 .pengbox{position:relative;flex:1;width:100%;display:flex;align-items:flex-end;justify-content:center;min-height:0}
-.floe{position:absolute;bottom:0;left:50%;transform:translateX(-50%);width:min(520px,90%);height:56px;background:var(--snow);border-radius:50%/60% 60% 40% 40%;box-shadow:0 10px 0 #a9d1e8, 0 24px 0 rgba(43,110,154,.25)}
+.floe{position:absolute;bottom:0;left:50%;transform:translateX(-50%);width:min(500px,88%);height:54px;background:linear-gradient(180deg,#ffffff 0%,#eef8fd 60%,#d5ecf8 100%);border-radius:50%/60% 60% 40% 40%;box-shadow:0 10px 0 #9fd0ec, 0 22px 0 #7fbde2, 0 34px 22px rgba(10,50,80,.35)}
 #mainPeng{position:relative;height:min(46vh,380px);width:auto;max-width:100%;margin-bottom:22px}
 .meter{position:relative;width:min(560px,100%);margin-top:14px}
+.stage > .meter{background:rgba(255,255,255,.88);border-radius:18px;padding:10px 14px 6px}
 .meter-track{position:relative;height:22px;border-radius:999px;background:linear-gradient(90deg,#d6efe1,#fbedc8 60%,#f8d3d4);overflow:hidden;border:2px solid var(--line)}
 .meter-fill{position:absolute;inset:0 auto 0 0;width:0%;border-radius:999px;background:var(--go);transition:background .3s}
 .z1 .meter-fill{background:var(--wait)} .z2 .meter-fill{background:var(--stop)}
 .mark{position:absolute;top:-6px;bottom:-6px;width:3px;border-radius:2px}
 .mark.y{background:#b97f00} .mark.r{background:var(--stop)}
 .meter-legend{display:flex;justify-content:space-between;font-size:.85rem;font-weight:700;color:var(--ink2);margin-top:4px}
-.demo{display:flex;align-items:center;gap:10px;margin-top:10px;font-weight:700;font-size:.9rem;width:min(560px,100%)}
+.demo{position:relative;background:rgba(255,255,255,.88);border-radius:14px;padding:6px 12px;display:flex;align-items:center;gap:10px;margin-top:10px;font-weight:700;font-size:.9rem;width:min(560px,100%)}
 .demo input{flex:1}
 .pausebadge{position:absolute;top:14px;right:14px;background:var(--ink);color:var(--snow);font-weight:800;border-radius:999px;padding:6px 14px;font-size:.9rem;letter-spacing:.06em;text-transform:uppercase}
 
@@ -186,6 +214,29 @@ main{flex:1;display:grid;grid-template-columns:150px minmax(0,1fr) 330px;gap:16p
   </section>
 
   <section class="panel stage" aria-live="polite">
+    <div class="scene" aria-hidden="true">
+      <div class="sky sky0"></div><div class="sky sky1"></div><div class="sky sky2"></div>
+      <svg class="aurora" viewBox="0 0 1000 300" preserveAspectRatio="none">
+        <defs><linearGradient id="au" x1="0" x2="1"><stop offset="0" stop-color="#5ff2b5"/><stop offset=".5" stop-color="#7fe0ff"/><stop offset="1" stop-color="#b48cff"/></linearGradient>
+        <filter id="aublur" x="-10%" y="-50%" width="120%" height="200%"><feGaussianBlur stdDeviation="16"/></filter></defs>
+        <path d="M-50 150 C150 60 300 210 500 115 S850 60 1050 135" stroke="url(#au)" stroke-width="46" fill="none" filter="url(#aublur)"/>
+        <path d="M-50 205 C200 130 350 250 560 170 S880 130 1050 190" stroke="url(#au)" stroke-width="24" fill="none" filter="url(#aublur)" opacity=".7"/>
+      </svg>
+      <div class="sun"></div>
+      <svg class="clouds" viewBox="0 0 1000 150" preserveAspectRatio="xMidYMin slice">
+        <g fill="#6f7d92"><ellipse cx="160" cy="70" rx="120" ry="38"/><ellipse cx="230" cy="48" rx="80" ry="40"/><ellipse cx="110" cy="52" rx="60" ry="30"/></g>
+        <g fill="#7e8ca1" style="animation-delay:-3s"><ellipse cx="760" cy="60" rx="140" ry="40"/><ellipse cx="840" cy="38" rx="80" ry="38"/><ellipse cx="690" cy="44" rx="60" ry="28"/></g>
+        <g fill="#8e9bb0" style="animation-duration:8s"><ellipse cx="470" cy="28" rx="110" ry="26"/></g>
+      </svg>
+      <svg class="bergs" viewBox="0 0 1000 150" preserveAspectRatio="xMidYMax slice">
+        <path d="M0 150 L0 104 L60 78 L110 96 L170 46 L240 92 L300 84 L350 150Z" fill="#eaf6fd"/>
+        <path d="M170 46 L196 150 L240 92Z" fill="#c4e2f3"/><path d="M60 78 L80 150 L110 96Z" fill="#d3eaf6"/>
+        <path d="M640 150 L680 92 L730 66 L770 88 L830 36 L885 92 L945 80 L1000 100 L1000 150Z" fill="#eaf6fd"/>
+        <path d="M830 36 L856 150 L885 92Z" fill="#c4e2f3"/><path d="M730 66 L748 150 L770 88Z" fill="#d3eaf6"/>
+        <path d="M400 150 L428 122 L470 116 L500 150Z" fill="#f6fbfe"/><path d="M470 116 L478 150 L500 150Z" fill="#d3eaf6"/>
+      </svg>
+      <div class="sea"></div>
+    </div>
     <canvas class="snow" id="snow"></canvas>
     <div class="pausebadge" id="pauseBadge" hidden>Pause</div>
     <div class="status">
