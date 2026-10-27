@@ -1,0 +1,664 @@
+<!doctype html>
+<html lang="de">
+<head>
+<meta charset="utf-8">
+<meta name="viewport" content="width=device-width,initial-scale=1,viewport-fit=cover">
+<title>Pinguin-Lärmampel</title>
+<link rel="preconnect" href="https://fonts.googleapis.com">
+<link rel="stylesheet" href="https://fonts.googleapis.com/css2?family=Baloo+2:wght@600;800&family=Nunito:wght@500;700;800&display=swap">
+<style>
+/* Layout: Tafelbild im Querformat – Ampel links, Pinguin-Bühne mittig, Fischeimer rechts. Eine Polarwelt, bewusst nur ein (helles) Thema. */
+:root{
+  --sky:#dcf0fa; --sky2:#f4fbff; --sea:#2b6e9a; --ink:#16324a; --ink2:#4d6a82;
+  --snow:#ffffff; --line:#b9d8ea;
+  --go:#25a865; --wait:#f0ae1c; --stop:#e3434a; --fish:#ff8a3d;
+  --housing:#203246;
+  --display:"Baloo 2","Trebuchet MS","Arial Rounded MT Bold",system-ui,sans-serif;
+  --body:"Nunito","Segoe UI",system-ui,sans-serif;
+  color-scheme:light;
+}
+*{box-sizing:border-box}
+[hidden]{display:none!important}
+html,body{height:100%}
+body{margin:0;background:linear-gradient(180deg,var(--sky) 0%,var(--sky2) 70%);color:var(--ink);font-family:var(--body);font-size:16px;
+  padding-left:max(16px,env(safe-area-inset-left,0px));padding-right:max(16px,env(safe-area-inset-right,0px));padding-block:12px;
+  display:flex;flex-direction:column;gap:12px;overflow-x:hidden}
+button,input,select{font:inherit}
+button{cursor:pointer}
+:focus-visible{outline:3px solid var(--sea);outline-offset:2px}
+
+/* Kopfzeile */
+.top{display:flex;align-items:center;gap:12px;flex-wrap:wrap}
+.brand{font-family:var(--display);font-weight:800;font-size:1.6rem;line-height:1;margin:0;margin-right:auto;display:flex;align-items:center;gap:10px}
+.brand small{font-family:var(--body);font-weight:700;font-size:.9rem;color:var(--ink2)}
+.btn{border:2px solid var(--line);background:var(--snow);color:var(--ink);border-radius:999px;padding:8px 16px;font-weight:800;display:inline-flex;align-items:center;gap:8px}
+.btn:hover{border-color:var(--sea)}
+.btn.primary{background:var(--sea);border-color:var(--sea);color:var(--snow)}
+.btn.primary:hover{background:#22597d}
+.btn svg{width:18px;height:18px}
+
+/* Hauptbereich */
+main{flex:1;display:grid;grid-template-columns:150px minmax(0,1fr) 330px;gap:16px;min-height:0}
+.panel{background:rgba(255,255,255,.75);border:2px solid var(--line);border-radius:24px}
+
+/* Ampel */
+.ampel-wrap{display:flex;flex-direction:column;align-items:center;justify-content:center;gap:14px}
+.ampel{background:var(--housing);border-radius:40px;padding:16px;display:flex;flex-direction:column;gap:14px;box-shadow:0 10px 0 #142333}
+.lamp{width:92px;height:92px;border-radius:50%;opacity:.22;transition:opacity .3s,box-shadow .3s,transform .3s}
+.lamp.r{background:var(--stop)} .lamp.y{background:var(--wait)} .lamp.g{background:var(--go)}
+.lamp.on{opacity:1;transform:scale(1.04)}
+.lamp.r.on{box-shadow:0 0 34px 8px rgba(227,67,74,.7)}
+.lamp.y.on{box-shadow:0 0 34px 8px rgba(240,174,28,.7)}
+.lamp.g.on{box-shadow:0 0 34px 8px rgba(37,168,101,.6)}
+.pole{width:22px;height:40px;background:var(--housing);border-radius:0 0 6px 6px;margin-top:-14px}
+
+/* Bühne */
+.stage{position:relative;display:flex;flex-direction:column;align-items:center;justify-content:space-between;padding:16px 20px 18px;overflow:hidden;min-height:420px}
+.snow{position:absolute;inset:0;pointer-events:none}
+.status{position:relative;text-align:center;display:flex;flex-direction:column;gap:2px;min-height:5.2rem}
+.status h2{font-family:var(--display);font-weight:800;font-size:clamp(1.8rem,4vw,3.2rem);line-height:1.05;margin:0;text-wrap:balance;transition:color .3s}
+.status p{margin:0;font-size:clamp(1rem,1.6vw,1.35rem);font-weight:700;color:var(--ink2)}
+.z0 .status h2{color:var(--go)} .z1 .status h2{color:#b97f00} .z2 .status h2{color:var(--stop)}
+.pengbox{position:relative;flex:1;width:100%;display:flex;align-items:flex-end;justify-content:center;min-height:0}
+.floe{position:absolute;bottom:0;left:50%;transform:translateX(-50%);width:min(520px,90%);height:56px;background:var(--snow);border-radius:50%/60% 60% 40% 40%;box-shadow:0 10px 0 #a9d1e8, 0 24px 0 rgba(43,110,154,.25)}
+#mainPeng{position:relative;height:min(46vh,380px);width:auto;max-width:100%;margin-bottom:22px}
+.meter{position:relative;width:min(560px,100%);margin-top:14px}
+.meter-track{position:relative;height:22px;border-radius:999px;background:linear-gradient(90deg,#d6efe1,#fbedc8 60%,#f8d3d4);overflow:hidden;border:2px solid var(--line)}
+.meter-fill{position:absolute;inset:0 auto 0 0;width:0%;border-radius:999px;background:var(--go);transition:background .3s}
+.z1 .meter-fill{background:var(--wait)} .z2 .meter-fill{background:var(--stop)}
+.mark{position:absolute;top:-6px;bottom:-6px;width:3px;border-radius:2px}
+.mark.y{background:#b97f00} .mark.r{background:var(--stop)}
+.meter-legend{display:flex;justify-content:space-between;font-size:.85rem;font-weight:700;color:var(--ink2);margin-top:4px}
+.demo{display:flex;align-items:center;gap:10px;margin-top:10px;font-weight:700;font-size:.9rem;width:min(560px,100%)}
+.demo input{flex:1}
+.pausebadge{position:absolute;top:14px;right:14px;background:var(--ink);color:var(--snow);font-weight:800;border-radius:999px;padding:6px 14px;font-size:.9rem;letter-spacing:.06em;text-transform:uppercase}
+
+/* Pinguin-Stimmungen */
+.peng .flip{transform-box:view-box;transition:transform .45s cubic-bezier(.3,1.4,.5,1)}
+.peng .pg-all{transform-box:view-box;transform-origin:120px 290px;transition:transform .4s}
+.peng .m-g,.peng .m-y,.peng .m-r{display:none}
+.peng.mood-g .m-g,.peng.mood-y .m-y,.peng.mood-r .m-r{display:inline}
+.peng.mood-g .pg-all{animation:bob 2.4s ease-in-out infinite}
+.peng.mood-g .flipR{animation:wave 1.1s ease-in-out infinite alternate}
+.peng.mood-y .pg-all{transform:rotate(-3deg)}
+.peng.mood-y .flipR{transform:rotate(-148deg)}
+.peng.mood-y .flipL{transform:rotate(8deg)}
+.peng.mood-r .flipL{transform:rotate(152deg)}
+.peng.mood-r .flipR{transform:rotate(-152deg)}
+.peng.mood-r .pg-all{animation:shake .16s linear infinite}
+.peng.cheer .pg-all{animation:jump .5s ease-in-out 3}
+.peng .spark{animation:twinkle 1.6s ease-in-out infinite}
+.peng .burst{animation:pulse .5s ease-in-out infinite alternate;transform-box:fill-box;transform-origin:center}
+@keyframes bob{50%{transform:translateY(-7px)}}
+@keyframes wave{from{transform:rotate(-25deg)}to{transform:rotate(-80deg)}}
+@keyframes shake{25%{transform:translateX(-3px)}75%{transform:translateX(3px)}}
+@keyframes jump{50%{transform:translateY(-28px)}}
+@keyframes twinkle{50%{opacity:.25}}
+@keyframes pulse{to{transform:scale(1.15)}}
+
+/* Belohnungen */
+.rewards{padding:18px;display:flex;flex-direction:column;gap:16px;min-width:0}
+.rewards h3{font-family:var(--display);font-weight:800;font-size:1.5rem;margin:0;line-height:1.1}
+.count{display:flex;align-items:baseline;gap:8px;font-family:var(--display);font-weight:800}
+.count b{font-size:3rem;line-height:1;color:var(--fish);font-variant-numeric:tabular-nums}
+.count span{font-size:1.4rem;color:var(--ink2)}
+.bucket{display:grid;grid-template-columns:repeat(5,1fr);gap:8px;background:#e8f5fc;border:2px dashed var(--line);border-radius:18px;padding:10px}
+.slot{aspect-ratio:1.4;max-width:100%;display:grid;place-items:center;border-radius:12px;background:var(--snow)}
+.slot svg{width:80%;height:auto}
+.slot.empty svg{opacity:.18;filter:grayscale(1)}
+.slot.pop{animation:pop .7s cubic-bezier(.3,1.6,.5,1)}
+@keyframes pop{0%{transform:scale(.2) rotate(-30deg)}100%{transform:scale(1)}}
+.next{display:flex;flex-direction:column;gap:8px}
+.next-label{display:flex;justify-content:space-between;font-weight:800;gap:8px}
+.next-label span:last-child{font-variant-numeric:tabular-nums;color:var(--ink2)}
+.bar{height:20px;border-radius:999px;background:#e3eef5;overflow:hidden;border:2px solid var(--line)}
+.bar i{display:block;height:100%;width:0%;background:linear-gradient(90deg,#ffb27a,var(--fish));border-radius:999px;transition:width .3s linear}
+.hint{font-size:.88rem;color:var(--ink2);margin:0;line-height:1.4}
+.stats{display:grid;grid-template-columns:1fr 1fr;gap:10px}
+.stat{background:var(--snow);border-radius:14px;padding:10px 12px}
+.stat small{display:block;font-size:.72rem;text-transform:uppercase;letter-spacing:.08em;font-weight:800;color:var(--ink2)}
+.stat b{font-family:var(--display);font-size:1.5rem;font-variant-numeric:tabular-nums}
+.rw-actions{margin-top:auto;display:flex;flex-wrap:wrap;gap:8px}
+.confirm{display:flex;flex-wrap:wrap;gap:8px;align-items:center;font-weight:700;font-size:.9rem;background:#fff4e5;border-radius:14px;padding:10px}
+
+/* Overlays */
+.overlay{position:fixed;inset:0;background:rgba(22,50,74,.55);display:grid;place-items:center;padding:16px;z-index:20;overflow:auto}
+.sheet{background:var(--snow);border-radius:28px;padding:24px;width:min(860px,100%);max-height:calc(100% - 8px);overflow:auto;display:flex;flex-direction:column;gap:16px;box-shadow:0 20px 60px rgba(0,0,0,.25)}
+.sheet h2{font-family:var(--display);font-weight:800;font-size:2rem;margin:0;line-height:1.1}
+.sheet p{margin:0;line-height:1.5}
+.variants{display:grid;grid-template-columns:repeat(auto-fill,minmax(120px,1fr));gap:12px}
+.variant{border:3px solid var(--line);background:var(--sky2);border-radius:20px;padding:10px 6px 8px;display:flex;flex-direction:column;align-items:center;gap:4px;color:var(--ink)}
+.variant svg{width:100%;height:110px}
+.variant b{font-family:var(--display);font-size:1.05rem;line-height:1.1}
+.variant small{color:var(--ink2);font-weight:700}
+.variant[aria-pressed="true"]{border-color:var(--sea);background:#d8eefb;box-shadow:0 4px 0 var(--sea)}
+.start-row{display:flex;flex-wrap:wrap;gap:10px;align-items:center}
+.err{background:#fde6e7;color:#8f1f25;border-radius:14px;padding:10px 14px;font-weight:700}
+.note{font-size:.88rem;color:var(--ink2)}
+.set-grid{display:grid;grid-template-columns:repeat(auto-fit,minmax(240px,1fr));gap:16px}
+.field{display:flex;flex-direction:column;gap:6px}
+.field label,.field .lbl{font-weight:800;display:flex;justify-content:space-between;gap:8px}
+.field output{font-variant-numeric:tabular-nums;color:var(--sea)}
+.field input[type=range]{width:100%;accent-color:var(--sea)}
+.seg{display:flex;flex-wrap:wrap;gap:6px}
+.seg button{border:2px solid var(--line);background:var(--sky2);border-radius:999px;padding:6px 12px;font-weight:800;color:var(--ink)}
+.seg button[aria-pressed="true"]{background:var(--sea);border-color:var(--sea);color:var(--snow)}
+.check{display:flex;gap:8px;align-items:center;font-weight:700}
+.check input{width:20px;height:20px;accent-color:var(--sea)}
+.celebrate{text-align:center;align-items:center}
+.celebrate svg.peng{height:240px;width:auto}
+#confetti{position:fixed;inset:0;pointer-events:none;z-index:30}
+.toast{position:fixed;left:50%;bottom:24px;transform:translateX(-50%);background:var(--ink);color:var(--snow);padding:12px 22px;border-radius:999px;font-weight:800;font-size:1.1rem;z-index:25;display:flex;gap:10px;align-items:center}
+.toast svg{width:34px}
+
+@media (max-width:980px){
+  main{grid-template-columns:1fr}
+  .ampel-wrap{order:-1}
+  .ampel{flex-direction:row;padding:12px}
+  .lamp{width:56px;height:56px}
+  .pole{display:none}
+  .stage{min-height:380px}
+  #mainPeng{height:260px}
+}
+@media (prefers-reduced-motion:reduce){
+  *,*::before,*::after{animation:none!important;transition:none!important}
+}
+</style>
+</head>
+<body>
+
+<header class="top">
+  <h1 class="brand">Pinguin-Lärmampel <small id="pengName">mit Pino</small></h1>
+  <button class="btn" id="btnPick" type="button"><svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.4" stroke-linecap="round"><circle cx="12" cy="9" r="5"/><path d="M5 21c1-4 4-6 7-6s6 2 7 6"/></svg>Pinguin wählen</button>
+  <button class="btn" id="btnSettings" type="button"><svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.4" stroke-linecap="round"><path d="M4 6h10M18 6h2M4 12h4M12 12h8M4 18h12M20 18h0"/><circle cx="16" cy="6" r="2"/><circle cx="10" cy="12" r="2"/><circle cx="18" cy="18" r="2"/></svg>Einstellungen</button>
+  <button class="btn" id="btnPause" type="button" disabled>Pause</button>
+  <button class="btn" id="btnFull" type="button"><svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.4" stroke-linecap="round"><path d="M4 9V4h5M20 9V4h-5M4 15v5h5M20 15v5h-5"/></svg>Vollbild</button>
+</header>
+
+<main id="app" class="z0">
+  <section class="ampel-wrap" aria-label="Ampel">
+    <div class="ampel">
+      <div class="lamp r" id="lampR"></div>
+      <div class="lamp y" id="lampY"></div>
+      <div class="lamp g on" id="lampG"></div>
+    </div>
+    <div class="pole"></div>
+  </section>
+
+  <section class="panel stage" aria-live="polite">
+    <canvas class="snow" id="snow"></canvas>
+    <div class="pausebadge" id="pauseBadge" hidden>Pause</div>
+    <div class="status">
+      <h2 id="statusTitle">Psst … Pino wartet</h2>
+      <p id="statusText">Starte die Lärmampel, dann hört Pino zu.</p>
+    </div>
+    <div class="pengbox">
+      <div class="floe"></div>
+      <div id="mainPengHolder"></div>
+    </div>
+    <div class="meter" aria-label="Lautstärke">
+      <div class="meter-track">
+        <div class="meter-fill" id="meterFill"></div>
+        <div class="mark y" id="markY"></div>
+        <div class="mark r" id="markR"></div>
+      </div>
+      <div class="meter-legend"><span>leise</span><span>Lautstärke</span><span>laut</span></div>
+    </div>
+    <div class="demo" id="demoRow" hidden>
+      <label for="demoSlider">Lautstärke simulieren</label>
+      <input type="range" id="demoSlider" min="0" max="100" value="15">
+    </div>
+  </section>
+
+  <aside class="panel rewards" aria-label="Belohnungen">
+    <div>
+      <h3 id="bucketTitle">Pinos Fischeimer</h3>
+    </div>
+    <div class="count"><b id="fishCount">0</b><span>von <span id="fishGoal">10</span> Fischen</span></div>
+    <div class="bucket" id="bucket"></div>
+    <div class="next">
+      <div class="next-label"><span>Nächster Fisch</span><span id="nextTime">3:00</span></div>
+      <div class="bar"><i id="nextBar"></i></div>
+      <p class="hint" id="ruleHint">Bei Grün füllt sich der Balken. Bei Rot hält er an.</p>
+    </div>
+    <div class="stats">
+      <div class="stat"><small>Leise Zeit</small><b id="statQuiet">0:00</b></div>
+      <div class="stat"><small>Zu laut</small><b id="statRed">0×</b></div>
+    </div>
+    <div class="rw-actions">
+      <button class="btn" type="button" id="btnBonus">+1 Fisch</button>
+      <button class="btn" type="button" id="btnReset">Eimer leeren</button>
+    </div>
+    <div class="confirm" id="confirmReset" hidden>
+      <span>Alle Fische und Zeiten löschen?</span>
+      <button class="btn primary" type="button" id="resetYes">Ja, leeren</button>
+      <button class="btn" type="button" id="resetNo">Abbrechen</button>
+    </div>
+  </aside>
+</main>
+
+<!-- Start / Pinguin wählen -->
+<div class="overlay" id="pickOverlay">
+  <div class="sheet" role="dialog" aria-modal="true" aria-labelledby="pickTitle">
+    <h2 id="pickTitle">Welcher Pinguin hört heute zu?</h2>
+    <div class="variants" id="variants"></div>
+    <div class="start-row" id="startRow">
+      <button class="btn primary" type="button" id="btnStartMic"><svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.4" stroke-linecap="round"><rect x="9" y="3" width="6" height="11" rx="3"/><path d="M5 11a7 7 0 0 0 14 0M12 18v3"/></svg>Mit Mikrofon starten</button>
+      <button class="btn" type="button" id="btnStartDemo">Ohne Mikrofon testen</button>
+    </div>
+    <div class="start-row" id="doneRow" hidden>
+      <button class="btn primary" type="button" id="btnPickDone">Fertig</button>
+    </div>
+    <div class="err" id="micErr" hidden></div>
+    <p class="note">Der Browser fragt einmal nach dem Mikrofon. Es wird nur die Lautstärke gemessen. Nichts wird aufgenommen, gespeichert oder verschickt.</p>
+  </div>
+</div>
+
+<!-- Einstellungen -->
+<div class="overlay" id="setOverlay" hidden>
+  <div class="sheet" role="dialog" aria-modal="true" aria-labelledby="setTitle">
+    <h2 id="setTitle">Einstellungen</h2>
+    <div class="field">
+      <span class="lbl">Arbeitsphase</span>
+      <div class="seg" id="presets">
+        <button type="button" data-p="still">Stillarbeit</button>
+        <button type="button" data-p="partner">Partnerarbeit</button>
+        <button type="button" data-p="gruppe">Gruppenarbeit</button>
+      </div>
+    </div>
+    <div class="meter" style="width:100%"><div class="meter-track"><div class="meter-fill" id="meterFill2"></div><div class="mark y" id="markY2"></div><div class="mark r" id="markR2"></div></div>
+      <div class="meter-legend"><span>Zum Einstellen: normal sprechen lassen und Balken beobachten</span></div></div>
+    <div class="set-grid">
+      <div class="field"><label for="sYellow">Gelb ab <output id="oYellow"></output></label><input type="range" id="sYellow" min="5" max="90" step="1"></div>
+      <div class="field"><label for="sRed">Rot ab <output id="oRed"></output></label><input type="range" id="sRed" min="10" max="98" step="1"></div>
+      <div class="field"><label for="sSens">Empfindlichkeit <output id="oSens"></output></label><input type="range" id="sSens" min="-20" max="20" step="1"></div>
+      <div class="field"><label for="sHold">Rot erst nach <output id="oHold"></output></label><input type="range" id="sHold" min="0.5" max="5" step="0.5"></div>
+      <div class="field"><label for="sMin">Zeit pro Fisch <output id="oMin"></output></label><input type="range" id="sMin" min="0.5" max="10" step="0.5"></div>
+      <div class="field"><label for="sGoal">Ziel <output id="oGoal"></output></label><input type="range" id="sGoal" min="3" max="20" step="1"></div>
+    </div>
+    <div class="field">
+      <span class="lbl">Wenn es rot wird</span>
+      <div class="seg" id="penalty">
+        <button type="button" data-v="pause">Balken hält an</button>
+        <button type="button" data-v="lose">Balken läuft zurück</button>
+      </div>
+    </div>
+    <label class="check"><input type="checkbox" id="sYellowHalf"> Bei Gelb füllt sich der Balken halb so schnell</label>
+    <label class="check"><input type="checkbox" id="sSound"> Töne abspielen (Fisch, Ziel erreicht, zu laut)</label>
+    <div class="start-row"><button class="btn primary" type="button" id="btnSetDone">Fertig</button></div>
+  </div>
+</div>
+
+<!-- Ziel erreicht -->
+<div class="overlay" id="winOverlay" hidden>
+  <div class="sheet celebrate" role="dialog" aria-modal="true" aria-labelledby="winTitle">
+    <div id="winPeng"></div>
+    <h2 id="winTitle">Geschafft!</h2>
+    <p id="winText"></p>
+    <div class="start-row"><button class="btn primary" type="button" id="btnWinNew">Neuen Eimer starten</button><button class="btn" type="button" id="btnWinClose">Schließen</button></div>
+  </div>
+</div>
+
+<div class="toast" id="toast" hidden></div>
+<canvas id="confetti"></canvas>
+
+<script>
+(function(){
+"use strict";
+
+/* ---------- Pinguin-Varianten ---------- */
+const VARIANTS = {
+  pino:   {name:"Pino",          label:"Klassisch",     body:"#1f3247", belly:"#ffffff", acc:""},
+  kaiser: {name:"Kaiser Karl",   label:"Kaiserpinguin", body:"#24313f", belly:"#fffaf0", acc:"kaiser"},
+  mia:    {name:"Mia",           label:"Mit Mütze",     body:"#1f3247", belly:"#ffffff", acc:"hat"},
+  lotte:  {name:"Königin Lotte", label:"Mit Krone",     body:"#2b2f5e", belly:"#ffffff", acc:"crown"},
+  paul:   {name:"Professor Paul",label:"Mit Brille",    body:"#25403a", belly:"#ffffff", acc:"glasses"},
+  flocke: {name:"Flocke",        label:"Pinguin-Baby",  body:"#8d9cab", belly:"#f3f6f9", acc:"baby"},
+  kosmo:  {name:"Kosmo",         label:"Astronaut",     body:"#1f3247", belly:"#ffffff", acc:"helmet"}
+};
+
+function penguinSVG(key, mood){
+  const p = VARIANTS[key] || VARIANTS.pino;
+  const baby = p.acc === "baby";
+  const er = baby ? 11 : 9;
+  const acc = {
+    kaiser:`<ellipse cx="76" cy="112" rx="9" ry="17" fill="#f7b733"/><ellipse cx="164" cy="112" rx="9" ry="17" fill="#f7b733"/><ellipse cx="120" cy="158" rx="30" ry="8" fill="#ffe1a1" opacity=".8"/>`,
+    hat:`<path d="M60 152 Q120 176 180 152 L182 168 Q120 194 58 168Z" fill="#e3434a"/><rect x="140" y="160" width="18" height="44" rx="6" fill="#e3434a" transform="rotate(-8 149 160)"/><path d="M145 196h14M146 188h13" stroke="#fff" stroke-width="3"/>
+         <path d="M70 90 Q120 26 170 90Z" fill="#e3434a"/><path d="M84 66 L156 66" stroke="#fff" stroke-width="5" opacity=".9"/><rect x="66" y="80" width="108" height="18" rx="9" fill="#fff"/><circle cx="120" cy="42" r="13" fill="#fff"/>`,
+    crown:`<path d="M84 74 L92 40 L106 60 L120 32 L134 60 L148 40 L156 74Z" fill="#f7c948" stroke="#c99a17" stroke-width="3" stroke-linejoin="round"/><circle cx="120" cy="58" r="5" fill="#e3434a"/><circle cx="99" cy="64" r="4" fill="#2b6e9a"/><circle cx="141" cy="64" r="4" fill="#2b6e9a"/>`,
+    glasses:`<circle cx="100" cy="106" r="16" fill="rgba(220,240,250,.3)" stroke="#16324a" stroke-width="4"/><circle cx="140" cy="106" r="16" fill="rgba(220,240,250,.3)" stroke="#16324a" stroke-width="4"/><path d="M116 104 Q120 100 124 104" stroke="#16324a" stroke-width="4" fill="none"/>
+         <path d="M98 160 L120 172 L142 160 L142 176 L120 168 L98 176Z" fill="#e3434a"/><circle cx="120" cy="170" r="5" fill="#b02a30"/>`,
+    baby:`<path d="M108 70 Q112 50 120 64 Q126 46 132 68" fill="none" stroke="${p.body}" stroke-width="7" stroke-linecap="round"/>`,
+    helmet:`<circle cx="120" cy="112" r="64" fill="rgba(170,215,245,.22)" stroke="#cbd8e4" stroke-width="7"/><path d="M80 82 Q92 64 112 58" stroke="#fff" stroke-width="6" fill="none" stroke-linecap="round" opacity=".9"/><rect x="88" y="168" width="64" height="12" rx="6" fill="#cbd8e4"/><line x1="120" y1="48" x2="120" y2="26" stroke="#cbd8e4" stroke-width="4"/><circle cx="120" cy="22" r="7" fill="#e3434a"/>`
+  }[p.acc] || "";
+  return `<svg class="peng mood-${mood||"g"}" viewBox="0 0 240 300" role="img" aria-label="${p.name}">
+  <g class="pg-all">
+    <ellipse cx="120" cy="290" rx="72" ry="7" fill="rgba(22,50,74,.14)"/>
+    <ellipse cx="94" cy="283" rx="23" ry="9" fill="#f59a23"/><ellipse cx="146" cy="283" rx="23" ry="9" fill="#f59a23"/>
+    <ellipse cx="120" cy="172" rx="80" ry="108" fill="${p.body}"/>
+    <ellipse cx="120" cy="200" rx="56" ry="78" fill="${p.belly}"/>
+    <ellipse cx="120" cy="113" rx="51" ry="39" fill="${p.belly}"/>
+    <ellipse cx="84" cy="126" rx="9" ry="6" fill="#ff9fb0" opacity=".6"/><ellipse cx="156" cy="126" rx="9" ry="6" fill="#ff9fb0" opacity=".6"/>
+    <!-- Augen -->
+    <g class="m-g"><path d="M89 109 Q100 95 111 109" stroke="#16324a" stroke-width="5" fill="none" stroke-linecap="round"/><path d="M129 109 Q140 95 151 109" stroke="#16324a" stroke-width="5" fill="none" stroke-linecap="round"/></g>
+    <g class="m-y"><circle cx="100" cy="106" r="${er}" fill="#16324a"/><circle cx="140" cy="106" r="${er}" fill="#16324a"/><circle cx="103" cy="102" r="3" fill="#fff"/><circle cx="143" cy="102" r="3" fill="#fff"/>
+      <path d="M88 ${baby?88:91} L108 84" stroke="#16324a" stroke-width="4" stroke-linecap="round"/><path d="M152 ${baby?88:91} L132 84" stroke="#16324a" stroke-width="4" stroke-linecap="round"/></g>
+    <g class="m-r"><path d="M90 98 L108 106 L90 114" stroke="#16324a" stroke-width="5" fill="none" stroke-linecap="round" stroke-linejoin="round"/><path d="M150 98 L132 106 L150 114" stroke="#16324a" stroke-width="5" fill="none" stroke-linecap="round" stroke-linejoin="round"/></g>
+    <!-- Schnabel -->
+    <g class="m-g"><path d="M105 121 Q120 114 135 121 Q120 140 105 121Z" fill="#f59a23"/></g>
+    <g class="m-y"><path d="M108 121 Q120 116 132 121 Q120 134 108 121Z" fill="#f59a23"/><path d="M110 142 q5 -4 10 0 t10 0" stroke="#16324a" stroke-width="3" fill="none" stroke-linecap="round"/></g>
+    <g class="m-r"><path d="M103 119 Q120 110 137 119 L120 125Z" fill="#f59a23"/><ellipse cx="120" cy="131" rx="11" ry="8" fill="#7a1f26"/><path d="M107 132 Q120 150 133 132Z" fill="#f59a23"/></g>
+    ${acc}
+    <!-- Flossen -->
+    <g class="flip flipL" style="transform-origin:56px 150px"><path d="M58 142 Q18 190 30 242 Q52 224 64 178Z" fill="${p.body}"/></g>
+    <g class="flip flipR" style="transform-origin:184px 150px"><path d="M182 142 Q222 190 210 242 Q188 224 176 178Z" fill="${p.body}"/></g>
+    <!-- Deko je Stimmung -->
+    <g class="m-g"><path class="spark" d="M200 60 l4 10 10 4 -10 4 -4 10 -4 -10 -10 -4 10 -4Z" fill="#f7c948"/><path class="spark" style="animation-delay:.6s" d="M36 80 l3 7 7 3 -7 3 -3 7 -3 -7 -7 -3 7 -3Z" fill="#7cc6ee"/></g>
+    <g class="m-y"><path d="M186 70 q8 12 0 18 q-8 -6 0 -18Z" fill="#7cc6ee"/></g>
+    <g class="m-r"><g class="burst"><path d="M14 90 q-10 20 0 40 M4 82 q-14 28 0 56" stroke="#e3434a" stroke-width="5" fill="none" stroke-linecap="round"/></g>
+      <g class="burst"><path d="M226 90 q10 20 0 40 M236 82 q14 28 0 56" stroke="#e3434a" stroke-width="5" fill="none" stroke-linecap="round"/></g></g>
+  </g></svg>`;
+}
+
+const FISH = `<svg viewBox="0 0 44 26" aria-hidden="true"><path d="M3 13 Q16 0 31 13 Q16 26 3 13Z" fill="#ff8a3d"/><path d="M29 13 L42 4 L40 13 L42 22Z" fill="#ff8a3d"/><path d="M16 7 Q20 13 16 19" stroke="#e86d1f" stroke-width="2" fill="none"/><circle cx="10" cy="11" r="2.2" fill="#16324a"/></svg>`;
+
+/* ---------- Zustand ---------- */
+const PRESETS = { still:{yellow:25,red:42}, partner:{yellow:38,red:58}, gruppe:{yellow:50,red:72} };
+const DEFAULTS = { variant:"pino", yellow:38, red:58, sens:0, hold:1.5, minutes:3, goal:10, penalty:"pause", yellowHalf:true, sound:false, preset:"partner" };
+let S = Object.assign({}, DEFAULTS);
+let R = { fish:0, progress:0, quiet:0, reds:0 };
+try{ const s = JSON.parse(localStorage.getItem("pla-settings")||"null"); if(s) S = Object.assign(S, s);
+     const r = JSON.parse(localStorage.getItem("pla-rewards")||"null"); if(r) R = Object.assign(R, r); }catch(e){}
+function save(){ try{ localStorage.setItem("pla-settings", JSON.stringify(S)); localStorage.setItem("pla-rewards", JSON.stringify(R)); }catch(e){} }
+
+const $ = id => document.getElementById(id);
+let started=false, running=false, demo=false, analyser=null, buf=null, audioCtx=null;
+let level=0, zone=0, celebrated=false;
+let t = {aboveY:0, aboveR:0, belowY:0, belowR:0};
+
+/* ---------- Darstellung ---------- */
+function name(){ return (VARIANTS[S.variant]||VARIANTS.pino).name; }
+function renderPenguin(){
+  $("mainPengHolder").innerHTML = penguinSVG(S.variant, ["g","y","r"][zone]);
+  $("mainPengHolder").firstElementChild.id = "mainPeng";
+  $("pengName").textContent = "mit " + name();
+  $("bucketTitle").textContent = name().split(" ").pop() + "s Fischeimer";
+  updateStatus();
+}
+function setMood(z){
+  const svg = $("mainPeng"); if(!svg) return;
+  svg.classList.remove("mood-g","mood-y","mood-r");
+  svg.classList.add("mood-"+["g","y","r"][z]);
+}
+function updateStatus(){
+  const n = name();
+  if(!started){ $("statusTitle").textContent = "Psst … " + n + " wartet"; $("statusText").textContent = "Starte die Lärmampel, dann hört " + n + " zu."; return; }
+  if(!running){ $("statusTitle").textContent = "Pause"; $("statusText").textContent = n + " ruht sich kurz aus."; return; }
+  const txt = [
+    ["Schön leise!", n + " ist glücklich. Weiter so!"],
+    ["Etwas leiser, bitte", n + " wird unruhig."],
+    ["Zu laut!", n + " hält sich die Ohren zu."]
+  ][zone];
+  $("statusTitle").textContent = txt[0]; $("statusText").textContent = txt[1];
+}
+function setZone(z){
+  if(z===zone) return;
+  if(z===2){ R.reds++; if(S.sound) tones([520,390],.18,.08); }
+  zone = z;
+  $("app").className = "z"+z;
+  $("lampG").classList.toggle("on", z===0);
+  $("lampY").classList.toggle("on", z===1);
+  $("lampR").classList.toggle("on", z===2);
+  setMood(z); updateStatus(); renderStats();
+}
+function renderMarks(){
+  for(const s of ["","2"]){ $("markY"+s).style.left = S.yellow+"%"; $("markR"+s).style.left = S.red+"%"; }
+}
+function fmt(sec){ sec=Math.max(0,Math.round(sec)); return Math.floor(sec/60)+":"+String(sec%60).padStart(2,"0"); }
+function renderBucket(popIndex){
+  const b = $("bucket"); b.innerHTML = "";
+  for(let i=0;i<S.goal;i++){
+    const d = document.createElement("div");
+    d.className = "slot" + (i<R.fish ? "" : " empty") + (i===popIndex ? " pop" : "");
+    d.innerHTML = FISH; b.appendChild(d);
+  }
+  $("fishCount").textContent = R.fish; $("fishGoal").textContent = S.goal;
+}
+function renderStats(){
+  const per = S.minutes*60;
+  $("nextBar").style.width = Math.min(100, R.progress/per*100) + "%";
+  $("nextTime").textContent = "noch " + fmt(per - R.progress);
+  $("statQuiet").textContent = fmt(R.quiet);
+  $("statRed").textContent = R.reds + "×";
+  $("ruleHint").textContent = "Bei Grün füllt sich der Balken" + (S.yellowHalf ? ", bei Gelb langsamer" : "") + ". Bei Rot " + (S.penalty==="lose" ? "läuft er zurück." : "hält er an.");
+}
+
+/* ---------- Belohnung ---------- */
+function addFish(){
+  if(R.fish >= S.goal) return;
+  R.fish++; R.progress = 0; save();
+  renderBucket(R.fish-1); renderStats();
+  const svg = $("mainPeng");
+  if(svg){ svg.classList.add("cheer"); setTimeout(()=>svg.classList.remove("cheer"),1600); }
+  toast(FISH + "Ein Fisch für " + name() + "!");
+  if(S.sound) tones([660,880,1100],.12,.07);
+  if(R.fish >= S.goal && !celebrated) celebrate();
+}
+function celebrate(){
+  celebrated = true;
+  $("winPeng").innerHTML = penguinSVG(S.variant,"g");
+  $("winText").textContent = "Ihr habt " + S.goal + " Fische für " + name() + " gesammelt. Toll gemacht, liebe Klasse!";
+  $("winOverlay").hidden = false;
+  confetti();
+  if(S.sound) tones([523,659,784,1047],.16,.08);
+}
+let toastTimer;
+function toast(html){ const el=$("toast"); el.innerHTML=html; el.hidden=false; clearTimeout(toastTimer); toastTimer=setTimeout(()=>el.hidden=true,2600); }
+
+/* ---------- Töne ---------- */
+function tones(freqs, dur, vol){
+  try{
+    const ctx = audioCtx || (audioCtx = new (window.AudioContext||window.webkitAudioContext)());
+    let at = ctx.currentTime;
+    for(const f of freqs){
+      const o=ctx.createOscillator(), g=ctx.createGain();
+      o.type="sine"; o.frequency.value=f; g.gain.setValueAtTime(0,at);
+      g.gain.linearRampToValueAtTime(vol,at+.02); g.gain.exponentialRampToValueAtTime(.0001,at+dur);
+      o.connect(g).connect(ctx.destination); o.start(at); o.stop(at+dur+.02); at+=dur*.9;
+    }
+  }catch(e){}
+}
+
+/* ---------- Mikrofon ---------- */
+async function startMic(){
+  $("micErr").hidden = true;
+  if(!navigator.mediaDevices || !navigator.mediaDevices.getUserMedia){
+    return showErr("Dieser Browser erlaubt hier kein Mikrofon. Öffne die Datei in Chrome, Edge oder Firefox (nicht in einer Vorschau oder einem Chatfenster).");
+  }
+  try{
+    const stream = await navigator.mediaDevices.getUserMedia({audio:{echoCancellation:false,noiseSuppression:false,autoGainControl:false}});
+    audioCtx = audioCtx || new (window.AudioContext||window.webkitAudioContext)();
+    if(audioCtx.state==="suspended") await audioCtx.resume();
+    const src = audioCtx.createMediaStreamSource(stream);
+    analyser = audioCtx.createAnalyser(); analyser.fftSize = 2048;
+    buf = new Float32Array(analyser.fftSize);
+    src.connect(analyser);
+    demo = false; $("demoRow").hidden = true;
+    begin();
+  }catch(e){
+    showErr(e && e.name==="NotAllowedError"
+      ? "Das Mikrofon wurde blockiert. Klicke in der Adressleiste auf das Schloss- oder Mikrofon-Symbol, erlaube das Mikrofon und versuche es noch einmal."
+      : "Kein Mikrofon gefunden. Ist eines angeschlossen und eingeschaltet? Du kannst die Ampel auch ohne Mikrofon testen.");
+  }
+}
+function showErr(msg){ const e=$("micErr"); e.textContent=msg; e.hidden=false; }
+function startDemo(){ demo = true; $("demoRow").hidden = false; begin(); }
+let wakeLock=null;
+async function keepAwake(){ try{ if("wakeLock" in navigator) wakeLock = await navigator.wakeLock.request("screen"); }catch(e){} }
+document.addEventListener("visibilitychange",()=>{ if(document.visibilityState==="visible" && started) keepAwake(); });
+
+function begin(){
+  started = true; running = true;
+  $("pickOverlay").hidden = true;
+  $("btnPause").disabled = false; $("btnPause").textContent = "Pause";
+  $("startRow").hidden = true; $("doneRow").hidden = false;
+  zone = -1; setZone(0);
+  keepAwake();
+}
+
+function readLevel(){
+  if(demo) return +$("demoSlider").value;
+  if(!analyser) return 0;
+  analyser.getFloatTimeDomainData(buf);
+  let sum=0; for(let i=0;i<buf.length;i++) sum += buf[i]*buf[i];
+  const rms = Math.sqrt(sum/buf.length);
+  const db = 20*Math.log10(rms || 1e-8);
+  return Math.max(0, Math.min(100, (db + 62 + S.sens) / 50 * 100));
+}
+
+/* ---------- Hauptschleife ---------- */
+let last = performance.now();
+function loop(now){
+  const dt = Math.min(.25, (now-last)/1000); last = now;
+  if(started){
+    const raw = readLevel();
+    level += (raw-level) * (raw>level ? .3 : .06);
+    const pct = level.toFixed(1)+"%";
+    $("meterFill").style.width = pct; $("meterFill2").style.width = pct;
+
+    if(running){
+      t.aboveR = level>=S.red    ? (t.aboveR||now) : 0;
+      t.aboveY = level>=S.yellow ? (t.aboveY||now) : 0;
+      t.belowR = level<S.red     ? (t.belowR||now) : 0;
+      t.belowY = level<S.yellow  ? (t.belowY||now) : 0;
+      if(zone<2 && t.aboveR && now-t.aboveR >= S.hold*1000) setZone(2);
+      else if(zone<1 && t.aboveY && now-t.aboveY >= 400) setZone(1);
+      else if(zone===2 && t.belowR && now-t.belowR >= 1500) setZone(1);
+      else if(zone===1 && t.belowY && now-t.belowY >= 1500) setZone(0);
+
+      if(R.fish < S.goal){
+        if(zone===0){ R.progress += dt; R.quiet += dt; }
+        else if(zone===1){ R.progress += S.yellowHalf ? dt*.5 : 0; }
+        else if(S.penalty==="lose"){ R.progress = Math.max(0, R.progress - dt*2); }
+        if(R.progress >= S.minutes*60) addFish();
+      } else if(zone===0) R.quiet += dt;
+      renderStats();
+    }
+  }
+  drawSnow(dt);
+  requestAnimationFrame(loop);
+}
+setInterval(save, 5000);
+
+/* ---------- Schneeflocken ---------- */
+const snowC = $("snow"), sctx = snowC.getContext("2d");
+let flakes = Array.from({length:40},()=>({x:Math.random(),y:Math.random(),r:1.5+Math.random()*3,s:.02+Math.random()*.04,w:Math.random()*6}));
+function drawSnow(dt){
+  const w = snowC.clientWidth, h = snowC.clientHeight;
+  if(snowC.width!==w || snowC.height!==h){ snowC.width=w; snowC.height=h; }
+  sctx.clearRect(0,0,w,h);
+  sctx.fillStyle = "rgba(255,255,255,.9)";
+  const speed = zone===2 ? 4 : zone===1 ? 2 : 1;
+  for(const f of flakes){
+    f.y += f.s*dt*speed; f.w += dt;
+    if(f.y>1.05){ f.y=-.05; f.x=Math.random(); }
+    sctx.beginPath(); sctx.arc((f.x*w)+Math.sin(f.w)*8, f.y*h, f.r, 0, Math.PI*2); sctx.fill();
+  }
+}
+
+/* ---------- Konfetti ---------- */
+function confetti(){
+  const c=$("confetti"), x=c.getContext("2d"); c.width=innerWidth; c.height=innerHeight;
+  const cols=["#25a865","#f0ae1c","#e3434a","#2b6e9a","#ff8a3d","#7cc6ee"];
+  const ps=Array.from({length:180},()=>({x:Math.random()*c.width,y:-20-Math.random()*c.height*.5,vx:(Math.random()-.5)*3,vy:2+Math.random()*4,a:Math.random()*6,c:cols[Math.random()*cols.length|0],s:6+Math.random()*8}));
+  const end=performance.now()+4500;
+  (function f(n){
+    x.clearRect(0,0,c.width,c.height);
+    for(const p of ps){ p.x+=p.vx; p.y+=p.vy; p.a+=.1; x.save(); x.translate(p.x,p.y); x.rotate(p.a); x.fillStyle=p.c; x.fillRect(-p.s/2,-p.s/4,p.s,p.s/2); x.restore(); }
+    if(n<end) requestAnimationFrame(f); else x.clearRect(0,0,c.width,c.height);
+  })(performance.now());
+}
+
+/* ---------- Pinguin-Auswahl ---------- */
+function renderVariants(){
+  const box = $("variants"); box.innerHTML = "";
+  for(const [k,v] of Object.entries(VARIANTS)){
+    const b = document.createElement("button");
+    b.type="button"; b.className="variant"; b.setAttribute("aria-pressed", String(k===S.variant));
+    b.innerHTML = penguinSVG(k,"g") + `<b>${v.name}</b><small>${v.label}</small>`;
+    b.addEventListener("click",()=>{ S.variant=k; save(); renderVariants(); renderPenguin(); });
+    box.appendChild(b);
+  }
+}
+
+/* ---------- Einstellungen ---------- */
+const fields = [
+  ["sYellow","yellow","oYellow",v=>v],
+  ["sRed","red","oRed",v=>v],
+  ["sSens","sens","oSens",v=>(v>0?"+":"")+v],
+  ["sHold","hold","oHold",v=>String(v).replace(".",",")+" s"],
+  ["sMin","minutes","oMin",v=>String(v).replace(".",",")+" min"],
+  ["sGoal","goal","oGoal",v=>v+" Fische"]
+];
+function syncSettings(){
+  for(const [id,key,out,f] of fields){ $(id).value = S[key]; $(out).textContent = f(S[key]); }
+  $("sYellowHalf").checked = S.yellowHalf; $("sSound").checked = S.sound;
+  document.querySelectorAll("#presets button").forEach(b=>b.setAttribute("aria-pressed", String(b.dataset.p===S.preset)));
+  document.querySelectorAll("#penalty button").forEach(b=>b.setAttribute("aria-pressed", String(b.dataset.v===S.penalty)));
+  renderMarks();
+}
+for(const [id,key] of fields){
+  $(id).addEventListener("input",e=>{
+    S[key] = +e.target.value;
+    if(key==="yellow" && S.red<=S.yellow) S.red = Math.min(98,S.yellow+5);
+    if(key==="red" && S.yellow>=S.red) S.yellow = Math.max(5,S.red-5);
+    if(key==="yellow"||key==="red") S.preset = "";
+    if(key==="goal"){ R.fish = Math.min(R.fish,S.goal); celebrated = R.fish>=S.goal; renderBucket(); }
+    syncSettings(); renderStats(); save();
+  });
+}
+$("presets").addEventListener("click",e=>{ const p=e.target.closest("button"); if(!p) return; S.preset=p.dataset.p; Object.assign(S,PRESETS[p.dataset.p]); syncSettings(); save(); });
+$("penalty").addEventListener("click",e=>{ const p=e.target.closest("button"); if(!p) return; S.penalty=p.dataset.v; syncSettings(); renderStats(); save(); });
+$("sYellowHalf").addEventListener("change",e=>{ S.yellowHalf=e.target.checked; renderStats(); save(); });
+$("sSound").addEventListener("change",e=>{ S.sound=e.target.checked; save(); if(S.sound) tones([660,880],.1,.06); });
+
+/* ---------- Bedienung ---------- */
+$("btnStartMic").addEventListener("click", startMic);
+$("btnStartDemo").addEventListener("click", startDemo);
+$("btnPick").addEventListener("click",()=>{ renderVariants(); $("pickOverlay").hidden=false; });
+$("btnPickDone").addEventListener("click",()=>{ $("pickOverlay").hidden=true; });
+$("btnSettings").addEventListener("click",()=>{ syncSettings(); $("setOverlay").hidden=false; });
+$("btnSetDone").addEventListener("click",()=>{ $("setOverlay").hidden=true; });
+function togglePause(){
+  if(!started) return;
+  running = !running;
+  $("btnPause").textContent = running ? "Pause" : "Weiter";
+  $("pauseBadge").hidden = running;
+  if(!running){ setZone(0); }
+  updateStatus();
+}
+$("btnPause").addEventListener("click", togglePause);
+$("btnFull").addEventListener("click",()=>{
+  try{ if(!document.fullscreenElement) document.documentElement.requestFullscreen().catch(()=>{}); else document.exitFullscreen(); }catch(e){}
+});
+$("btnBonus").addEventListener("click", addFish);
+$("btnReset").addEventListener("click",()=>{ $("confirmReset").hidden=false; });
+$("resetNo").addEventListener("click",()=>{ $("confirmReset").hidden=true; });
+function resetAll(){ R={fish:0,progress:0,quiet:0,reds:0}; celebrated=false; save(); renderBucket(); renderStats(); }
+$("resetYes").addEventListener("click",()=>{ resetAll(); $("confirmReset").hidden=true; });
+$("btnWinNew").addEventListener("click",()=>{ resetAll(); $("winOverlay").hidden=true; });
+$("btnWinClose").addEventListener("click",()=>{ $("winOverlay").hidden=true; });
+document.addEventListener("keydown",e=>{
+  if(e.target.matches("input,button")) return;
+  if(e.code==="Space"){ e.preventDefault(); togglePause(); }
+  if(e.key==="f"||e.key==="F") $("btnFull").click();
+});
+
+/* ---------- Start ---------- */
+celebrated = R.fish >= S.goal;
+renderVariants(); renderPenguin(); renderBucket(); syncSettings(); renderStats();
+requestAnimationFrame(loop);
+})();
+</script>
+</body>
+</html>
